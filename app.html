@@ -1,0 +1,684 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Студия — Kadro</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23141414'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%23ff4a2e'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: studio app — top bar with balance, three tabs (characters, new video, my videos), sticky merge bar. */
+:root {
+  --paper: #f3f1ec; --card: #ffffff; --ink: #151413; --muted: #625d56; --line: #dcd6cc; --soft: #e9e5dd;
+  --rec: #e5402a; --rec-ink: #ffffff; --ok: #1f7a4d; --warn: #9a6400;
+  --f-display: "Unbounded", "Manrope", system-ui, sans-serif;
+  --f-body: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --paper: #0f0f10; --card: #18181a; --ink: #f1eee8; --muted: #a39e96; --line: #2b2a2d; --soft: #212024; --rec: #ff5a3c; --rec-ink: #0f0f10; --ok: #5fd39a; --warn: #f0c150; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --paper: #0f0f10; --card: #18181a; --ink: #f1eee8; --muted: #a39e96; --line: #2b2a2d; --soft: #212024; --rec: #ff5a3c; --rec-ink: #0f0f10; --ok: #5fd39a; --warn: #f0c150; color-scheme: dark; }
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--paper); color: var(--ink); font: 16px/1.5 var(--f-body); -webkit-font-smoothing: antialiased; padding-bottom: 90px; }
+[hidden] { display: none !important; }
+img, video, audio { max-width: 100%; display: block; }
+:focus-visible { outline: 2px solid var(--rec); outline-offset: 2px; }
+.wrap { max-width: 1160px; margin: 0 auto; padding-inline: 16px; }
+.mono { font-family: var(--f-mono); font-size: 13px; }
+.muted { color: var(--muted); }
+h2 { font: 700 22px/1.2 var(--f-display); letter-spacing: -.01em; margin: 0 0 6px; }
+h3 { font: 700 16px/1.3 var(--f-display); margin: 0; }
+
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-block: 14px; flex-wrap: wrap; }
+.logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); font: 700 18px/1 var(--f-display); }
+.logo i { width: 26px; height: 26px; border-radius: 8px; background: var(--ink); position: relative; flex: none; }
+.logo i::after { content: ""; position: absolute; width: 9px; height: 9px; border-radius: 50%; background: var(--rec); left: 8.5px; top: 8.5px; }
+.right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.bal { font: 500 14px var(--f-mono); border: 1px solid var(--line); border-radius: 999px; padding: 7px 12px; background: var(--card); }
+.bal b { color: var(--rec); }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border-radius: 999px; padding: 10px 18px; font: 700 14.5px var(--f-body); text-decoration: none; background: var(--ink); color: var(--paper); border: 0; cursor: pointer; white-space: nowrap; }
+.btn.rec { background: var(--rec); color: var(--rec-ink); }
+.btn.ghost { background: none; color: var(--ink); border: 1px solid var(--line); }
+.btn.sm { padding: 6px 12px; font-size: 13px; }
+.btn.danger { background: none; color: var(--rec); border: 1px solid var(--line); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.lang { border: 1px solid var(--line); background: none; color: var(--ink); border-radius: 999px; padding: 7px 11px; font: 500 13px var(--f-mono); cursor: pointer; }
+
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin-bottom: 22px; overflow-x: auto; }
+.tabs button { background: none; border: 0; border-bottom: 2px solid transparent; padding: 12px 14px; font: 700 15px var(--f-body); color: var(--muted); cursor: pointer; white-space: nowrap; }
+.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--rec); }
+.tabs .cnt { font: 500 12px var(--f-mono); color: var(--muted); margin-left: 4px; }
+
+.panel { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 20px; }
+.form { display: grid; gap: 14px; }
+.row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+label.f { display: grid; gap: 5px; font-size: 13.5px; font-weight: 700; }
+label.f small { font-weight: 500; color: var(--muted); }
+input[type=text], input[type=number], textarea, select { width: 100%; border: 1px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 10px; padding: 10px 12px; font: 15px var(--f-body); }
+textarea { resize: vertical; min-height: 84px; }
+input[type=range] { width: 100%; accent-color: var(--rec); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 3px; background: var(--paper); }
+.seg button { border: 0; background: none; padding: 7px 14px; border-radius: 999px; font: 700 14px var(--f-body); color: var(--muted); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-top: 4px; }
+.price { font: 500 14px var(--f-mono); }
+.price b { color: var(--rec); font-size: 16px; }
+.hint { font-size: 13.5px; color: var(--muted); }
+.ideas { display: flex; gap: 6px; flex-wrap: wrap; }
+.ideas button { border: 1px dashed var(--line); background: none; color: var(--muted); border-radius: 999px; padding: 4px 10px; font-size: 12.5px; cursor: pointer; }
+
+/* characters */
+.chars { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
+.ch { background: var(--card); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; display: grid; grid-template-rows: auto 1fr; }
+.ch .pic { aspect-ratio: 3 / 4; background: var(--soft); position: relative; }
+.ch .pic img { width: 100%; height: 100%; object-fit: cover; }
+.ch .body { padding: 12px 14px 14px; display: grid; gap: 8px; align-content: start; }
+.ch .meta { font: 500 12px var(--f-mono); color: var(--muted); }
+.ch .refs { display: flex; gap: 6px; }
+.ch .refs img { width: 44px; height: 58px; object-fit: cover; border-radius: 6px; cursor: zoom-in; }
+.ch .acts { display: flex; gap: 6px; flex-wrap: wrap; }
+.newch { border: 2px dashed var(--line); border-radius: 18px; display: grid; place-items: center; min-height: 260px; background: none; color: var(--muted); font: 700 16px var(--f-body); cursor: pointer; }
+.newch span { display: grid; gap: 6px; justify-items: center; }
+.newch b { font-size: 34px; line-height: 1; color: var(--rec); }
+.wait { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 16px; font-size: 14px; color: var(--muted); }
+.spin { width: 26px; height: 26px; border: 3px solid var(--line); border-top-color: var(--rec); border-radius: 50%; animation: sp 1s linear infinite; margin: 0 auto 8px; }
+@keyframes sp { to { transform: rotate(360deg); } }
+.picker { grid-column: 1 / -1; }
+.cands { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 14px 0; }
+.cands button { border: 2px solid transparent; padding: 0; border-radius: 12px; overflow: hidden; cursor: pointer; background: var(--soft); aspect-ratio: 3 / 4; }
+.cands button[aria-pressed="true"] { border-color: var(--rec); }
+.cands img { width: 100%; height: 100%; object-fit: cover; }
+@media (max-width: 640px) { .cands { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.voicebox { border-top: 1px solid var(--line); padding-top: 10px; display: grid; gap: 8px; }
+audio { width: 100%; height: 34px; }
+
+/* composer */
+.who { display: flex; gap: 8px; flex-wrap: wrap; }
+.who button { display: flex; gap: 8px; align-items: center; border: 2px solid var(--line); background: var(--paper); border-radius: 12px; padding: 5px 10px 5px 5px; cursor: pointer; color: var(--ink); font: 700 14px var(--f-body); }
+.who button img { width: 34px; height: 44px; border-radius: 7px; object-fit: cover; }
+.who button[aria-pressed="true"] { border-color: var(--rec); }
+.lines { display: grid; gap: 8px; }
+.line { display: grid; grid-template-columns: 150px minmax(0, 1fr) auto; gap: 8px; align-items: start; }
+@media (max-width: 640px) { .line { grid-template-columns: 1fr; } }
+.empty { text-align: center; padding: 40px 20px; color: var(--muted); }
+
+/* videos */
+.vids { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+.vd { background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; display: grid; grid-template-rows: auto 1fr; position: relative; }
+.vd .media { background: #000; aspect-ratio: 9 / 16; position: relative; }
+.vd.w .media { aspect-ratio: 16 / 9; }
+.vd.s .media { aspect-ratio: 1; }
+.vd video, .vd .media img { width: 100%; height: 100%; object-fit: contain; }
+.vd .media .wait { color: #ddd; background: rgba(0,0,0,.45); }
+.vd .body { padding: 10px 12px 12px; display: grid; gap: 6px; align-content: start; }
+.vd .tag { font: 500 11.5px var(--f-mono); color: var(--muted); }
+.vd .txt { font-size: 14px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.vd .acts { display: flex; gap: 6px; flex-wrap: wrap; }
+.vd .sel { position: absolute; top: 8px; left: 8px; z-index: 2; background: rgba(0,0,0,.6); color: #fff; border-radius: 8px; padding: 4px 8px; font-size: 13px; display: flex; gap: 6px; align-items: center; }
+.vd.picked { outline: 3px solid var(--rec); }
+.fail { color: var(--rec); font-size: 13.5px; }
+
+.mergebar { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); background: var(--ink); color: var(--paper); border-radius: 999px; padding: 8px 8px 8px 18px; display: flex; gap: 12px; align-items: center; box-shadow: 0 14px 40px -12px rgba(0,0,0,.5); z-index: 20; max-width: calc(100% - 24px); }
+
+/* gate + modal + toast */
+.gate { max-width: 560px; margin: 40px auto; display: grid; gap: 18px; }
+.codebox { display: flex; gap: 8px; }
+.codebox input { font: 500 16px var(--f-mono); text-transform: uppercase; }
+.packs { display: grid; gap: 10px; }
+.pk { display: flex; justify-content: space-between; align-items: center; gap: 12px; border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; background: var(--card); }
+.pk.pop { border-color: var(--rec); }
+.pk b { font: 700 16px var(--f-display); }
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: grid; place-items: center; padding: 16px; z-index: 50; }
+.modal .panel { width: min(520px, 100%); max-height: 90vh; overflow: auto; display: grid; gap: 14px; }
+.modal img.big { max-height: 80vh; border-radius: 12px; margin: auto; }
+.toast { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--paper); padding: 10px 16px; border-radius: 12px; z-index: 60; font-size: 14.5px; max-width: calc(100% - 24px); }
+.toast.bad { background: var(--rec); color: var(--rec-ink); }
+.keynote { background: var(--soft); border-radius: 14px; padding: 14px 16px; display: grid; gap: 6px; margin-bottom: 18px; }
+.keynote code { font: 700 20px var(--f-mono); letter-spacing: .04em; }
+@media (prefers-reduced-motion: reduce) { .spin { animation-duration: 3s; } }
+@media (max-width: 640px) { .chars { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .newch { min-height: 0; grid-column: 1 / -1; padding: 14px; } .newch span { display: flex; align-items: center; gap: 10px; } .newch b { font-size: 26px; } .ch .refs img { width: 34px; height: 45px; } .bal, .lang { padding: 6px 10px; } #codeBtn { display: none; } .vids { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="bar">
+    <a class="logo" href="/"><i></i><span id="brand">Kadro</span></a>
+    <div class="right">
+      <span class="bal" id="bal" hidden role="button" tabindex="0" style="cursor:pointer"><span data-t="bal"></span> <b id="balN">0</b></span>
+      <button class="btn rec sm" id="topBuy" data-t="buy" hidden></button>
+      <button class="btn ghost sm" id="codeBtn" hidden></button>
+      <button class="lang" id="langBtn" type="button">EN</button>
+    </div>
+  </header>
+
+  <!-- вход -->
+  <section class="gate" id="gate" hidden>
+    <div>
+      <h2 data-t="gate.title"></h2>
+      <p class="muted" data-t="gate.text"></p>
+    </div>
+    <div class="panel form">
+      <label class="f"><span data-t="gate.code"></span>
+        <div class="codebox"><input type="text" id="codeIn" placeholder="KD-XXXX-XXXX" autocomplete="off"><button class="btn" id="codeGo" data-t="gate.enter"></button></div>
+      </label>
+      <div class="fail" id="codeErr" hidden></div>
+    </div>
+    <div>
+      <h3 style="margin-bottom:10px" data-t="gate.buy"></h3>
+      <div class="packs" id="gatePacks"></div>
+    </div>
+  </section>
+
+  <!-- студия -->
+  <main id="studio" hidden>
+    <div class="keynote" id="keynote" hidden>
+      <span data-t="key.saved"></span>
+      <code id="keyShow"></code>
+      <span class="hint" data-t="key.hint"></span>
+      <div><button class="btn sm ghost" id="keyCopy" data-t="key.copy"></button> <button class="btn sm" id="keyOk" data-t="key.ok"></button></div>
+    </div>
+
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-tab="chars" aria-selected="true"><span data-t="tab.chars"></span><span class="cnt" id="cntChars"></span></button>
+      <button role="tab" data-tab="new" aria-selected="false"><span data-t="tab.new"></span></button>
+      <button role="tab" data-tab="videos" aria-selected="false"><span data-t="tab.videos"></span><span class="cnt" id="cntVideos"></span></button>
+    </nav>
+
+    <!-- персонажи -->
+    <section data-pane="chars">
+      <div class="panel form" id="wizard" hidden style="margin-bottom:16px">
+        <div class="foot" style="padding:0"><h2 data-t="w.title"></h2><button class="btn ghost sm" id="wClose" data-t="cancel"></button></div>
+        <p class="hint" style="margin:0" data-t="w.rule"></p>
+        <div class="row">
+          <label class="f"><span data-t="w.name"></span><input type="text" id="wName" maxlength="40"></label>
+          <label class="f"><span data-t="w.gender"></span><div class="seg" id="wGender"><button type="button" data-v="female" aria-pressed="true" data-t="w.female"></button><button type="button" data-v="male" aria-pressed="false" data-t="w.male"></button></div></label>
+          <label class="f"><span data-t="w.age"></span><input type="number" id="wAge" min="18" max="80" value="28"></label>
+        </div>
+        <label class="f"><span data-t="w.look"></span><small data-t="w.lookHint"></small><textarea id="wLook" maxlength="500"></textarea></label>
+        <div class="ideas" id="wIdeas"></div>
+        <label class="f"><span data-t="w.outfit"></span><input type="text" id="wOutfit" maxlength="300"></label>
+        <div class="row">
+          <label class="f"><span data-t="w.voice"></span><select id="wVoice"></select></label>
+          <label class="f"><span><span data-t="w.speed"></span> <span class="mono" id="wSpeedV">1.0</span></span><input type="range" id="wSpeed" min="0.7" max="1.4" step="0.05" value="1"></label>
+          <label class="f"><span><span data-t="w.pitch"></span> <span class="mono" id="wPitchV">0</span></span><input type="range" id="wPitch" min="-6" max="6" step="1" value="0"></label>
+          <label class="f"><span data-t="w.sample"></span><select id="wLang"></select></label>
+        </div>
+        <div class="foot"><span class="price"><span data-t="price"></span> <b id="wPrice"></b></span><button class="btn rec" id="wGo" data-t="w.go"></button></div>
+      </div>
+      <div class="chars" id="charList"></div>
+    </section>
+
+    <!-- новое видео -->
+    <section data-pane="new" hidden>
+      <div class="panel form" id="composer">
+        <div class="seg" id="mode"><button type="button" data-v="talk" aria-pressed="true" data-t="m.talk"></button><button type="button" data-v="scene" aria-pressed="false" data-t="m.scene"></button></div>
+        <p class="hint" style="margin:0" id="modeHint"></p>
+        <label class="f"><span id="whoLabel"></span><div class="who" id="who"></div></label>
+
+        <div id="talkBox" class="form">
+          <label class="f"><span data-t="t.text"></span><small id="tCount"></small><textarea id="tText" maxlength="800"></textarea></label>
+          <label class="f"><span data-t="t.scene"></span><small data-t="t.sceneHint"></small><input type="text" id="tScene" maxlength="400"></label>
+          <div class="row">
+            <label class="f"><span data-t="lang"></span><select id="tLang"></select></label>
+            <label class="f"><span data-t="t.emotion"></span><select id="tEmo"></select></label>
+            <label class="f"><span data-t="aspect"></span><select id="tAspect"></select></label>
+          </div>
+        </div>
+
+        <div id="sceneBox" class="form" hidden>
+          <label class="f"><span data-t="s.scene"></span><small data-t="s.sceneHint"></small><textarea id="sScene" maxlength="600"></textarea></label>
+          <div class="f" style="display:grid;gap:6px"><b style="font-size:13.5px" data-t="s.lines"></b><div class="lines" id="sLines"></div><div><button type="button" class="btn ghost sm" id="sAdd" data-t="s.add"></button></div></div>
+          <div class="row">
+            <label class="f"><span data-t="lang"></span><select id="sLang"></select></label>
+            <label class="f"><span data-t="s.model"></span><select id="sModel"></select></label>
+            <label class="f"><span data-t="s.duration"></span><select id="sDur"></select></label>
+            <label class="f"><span data-t="aspect"></span><select id="sAspect"></select></label>
+          </div>
+        </div>
+
+        <label class="f"><span data-t="from"></span><small data-t="fromHint"></small><select id="from"></select></label>
+        <div class="foot"><span class="price"><span data-t="price"></span> <b id="vPrice"></b> <span class="hint" id="vPriceNote"></span></span><button class="btn rec" id="vGo" data-t="v.go"></button></div>
+      </div>
+      <div class="empty" id="noChars" hidden><p data-t="noChars"></p><button class="btn rec" id="noCharsGo" data-t="w.title"></button></div>
+    </section>
+
+    <!-- мои видео -->
+    <section data-pane="videos" hidden>
+      <div class="vids" id="vidList"></div>
+    </section>
+  </main>
+</div>
+
+<div class="mergebar" id="mergeBar" hidden><span id="mergeTxt"></span><button class="btn rec sm" id="mergeGo"></button><button class="btn sm ghost" style="color:inherit;border-color:#555" id="mergeX" data-t="cancel"></button></div>
+
+<div class="modal" id="buyModal" hidden><div class="panel"><div class="foot" style="padding:0"><h2 data-t="buyTitle"></h2><button class="btn ghost sm" data-close data-t="close"></button></div><div class="packs" id="modalPacks"></div><div class="fail" id="buyErr" hidden></div></div></div>
+<div class="modal" id="codeModal" hidden><div class="panel"><div class="foot" style="padding:0"><h2 data-t="code.title"></h2><button class="btn ghost sm" data-close data-t="close"></button></div><p class="hint" style="margin:0" data-t="key.hint"></p><code class="mono" style="font-size:20px" id="codeFull"></code><div class="foot"><button class="btn ghost sm" id="codeCopy" data-t="key.copy"></button><button class="btn danger sm" id="logout" data-t="code.out"></button></div></div></div>
+<div class="modal" id="imgModal" hidden><img class="big" id="imgBig" alt=""></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+  const T = {
+    ru: {
+      bal: "Баланс:", buy: "Пополнить", cancel: "Отмена", close: "Закрыть", price: "Стоимость:", cr: "кр.", lang: "Язык речи", aspect: "Формат",
+      "gate.title": "Вход в студию", "gate.text": "Введите личный код или купите пакет кредитов — код появится сразу после оплаты.", "gate.code": "Ваш код", "gate.enter": "Войти", "gate.buy": "Купить кредиты", "gate.bad": "Код не найден.",
+      "key.saved": "Ваш личный код. Сохраните его — по нему вы войдёте с любого устройства:", "key.hint": "Код хранится только в этом браузере. Не показывайте его другим: по нему тратятся ваши кредиты.", "key.copy": "Скопировать", "key.ok": "Сохранил(а)", "copied": "Скопировано",
+      "code.title": "Ваш код", "code.out": "Выйти",
+      "tab.chars": "Персонажи", "tab.new": "Новое видео", "tab.videos": "Мои видео",
+      "w.title": "Новый персонаж", "w.rule": "Только вымышленные взрослые люди. Не сравнивайте внешность с реальными людьми.", "w.name": "Имя", "w.gender": "Пол", "w.female": "Женщина", "w.male": "Мужчина", "w.age": "Возраст (18–80)",
+      "w.look": "Внешность", "w.lookHint": "Волосы, глаза, черты лица, телосложение, особые приметы.", "w.outfit": "Одежда", "w.voice": "Голос", "w.speed": "Скорость", "w.pitch": "Тон", "w.sample": "Язык образца голоса", "w.go": "Создать 4 варианта",
+      "w.lookPh": "Светлые волосы до плеч, серо-зелёные глаза, лёгкие веснушки, открытая улыбка, стройная.", "w.outfitPh": "Бежевый оверсайз-свитер",
+      "ideas": ["Тёмные кудрявые волосы, карие глаза, густые брови, короткая борода, спортивное телосложение", "Короткая стрижка-пикси, рыжие волосы, зелёные глаза, веснушки, тонкие черты лица", "Седые волосы, аккуратная стрижка, голубые глаза, морщинки у глаз, добрая улыбка", "Длинные прямые чёрные волосы, тёмные глаза, высокие скулы, лёгкий макияж"],
+      "c.new": "Новый персонаж", "c.portraits": "Рисуем 4 варианта лица…", "c.sheet": "Делаем паспорт персонажа: 3 ракурса и голос…", "c.pick": "Выберите лицо", "c.pickHint": "Это лицо будет у персонажа во всех видео. Остальные варианты удалятся.", "c.choose": "Выбрать это лицо", "c.reroll": "Другие варианты",
+      "c.failed": "Не получилось. Кредиты возвращены.", "c.retry": "Попробовать снова", "c.video": "Снять видео", "c.voice": "Голос", "c.voiceSave": "Сменить голос", "c.voiceBusy": "Озвучиваем новый образец…", "c.rename": "Переименовать", "c.del": "Удалить", "c.delQ": "Удалить персонажа? Его видео останутся.", "c.newName": "Новое имя:", "c.ready": "готов", "c.years": "лет",
+      "m.talk": "Говорит в кадр", "m.scene": "Сцена", "m.talkHint": "Персонаж произносит ваш текст в камеру с точной синхронизацией губ. Длина видео — по длине текста.", "m.sceneHint": "Персонаж (или двое) действуют в описанной сцене, с репликами и звуком. Лучше всего для сюжетов и диалогов.",
+      "who1": "Персонаж", "who2": "Персонажи (до двух)",
+      "t.text": "Что он скажет", "t.scene": "Где он (необязательно)", "t.sceneHint": "Например: в уютном кафе у окна, вечерний свет.", "t.emotion": "Настроение",
+      "emo": { neutral: "Спокойно", happy: "Радостно", sad: "Грустно", angry: "Раздражённо", surprised: "Удивлённо", fearful: "Тревожно" },
+      "s.scene": "Что происходит", "s.sceneHint": "Место, действие, движение камеры. Например: идут по ночной улице под дождём, камера едет перед ними.", "s.lines": "Реплики (необязательно, до 4)", "s.add": "+ Реплика", "s.model": "Модель", "s.duration": "Длительность", "s.linePh": "Текст реплики",
+      "from": "Продолжить с видео", "fromHint": "Новое видео начнётся с последнего кадра выбранного — так получается серия.", "fromNone": "— Начать с нуля —",
+      "v.go": "Снять видео", "noChars": "Сначала создайте персонажа — затем он сможет сниматься в видео.",
+      "est": "≈ {s} сек речи; точная цена — по реальной длине, лишнее вернём", "sec": "сек",
+      "v.talk": "В кадр", "v.scene": "Сцена", "v.merge": "Склейка", "v.dl": "Скачать", "v.cont": "Продолжить", "v.del": "Удалить", "v.delQ": "Удалить видео?", "v.work": "Снимаем: {s}…", "v.queue": "Снимаем…", "v.sel": "в склейку",
+      "v.empty": "Здесь появятся ваши видео.", "merge": "Выбрано клипов: {n}", "mergeGo": "Склеить · {p} кр.", "mergeOk": "Склейка запущена",
+      "started": "Запущено! Готовое видео появится во вкладке «Мои видео».", "charStarted": "Рисуем варианты — это займёт около минуты.",
+      "buyTitle": "Пополнить баланс", "buyBtn": "Купить", "soon": "Оплата пока не подключена", "noMoney": "Не хватает кредитов.",
+      "paid": "Оплата прошла, начислено {n} кр.",
+    },
+    en: {
+      bal: "Balance:", buy: "Top up", cancel: "Cancel", close: "Close", price: "Cost:", cr: "cr.", lang: "Speech language", aspect: "Format",
+      "gate.title": "Sign in to the studio", "gate.text": "Enter your personal code or buy a credit pack — you get a code right after payment.", "gate.code": "Your code", "gate.enter": "Sign in", "gate.buy": "Buy credits", "gate.bad": "Code not found.",
+      "key.saved": "Your personal code. Save it — it signs you in on any device:", "key.hint": "The code is stored only in this browser. Don't share it: it spends your credits.", "key.copy": "Copy", "key.ok": "Saved it", "copied": "Copied",
+      "code.title": "Your code", "code.out": "Sign out",
+      "tab.chars": "Characters", "tab.new": "New video", "tab.videos": "My videos",
+      "w.title": "New character", "w.rule": "Fictional adults only. Don't compare the looks to real people.", "w.name": "Name", "w.gender": "Gender", "w.female": "Woman", "w.male": "Man", "w.age": "Age (18–80)",
+      "w.look": "Looks", "w.lookHint": "Hair, eyes, facial features, build, distinctive marks.", "w.outfit": "Outfit", "w.voice": "Voice", "w.speed": "Speed", "w.pitch": "Pitch", "w.sample": "Voice sample language", "w.go": "Create 4 options",
+      "w.lookPh": "Shoulder-length blond hair, grey-green eyes, light freckles, open smile, slim.", "w.outfitPh": "Beige oversized sweater",
+      "ideas": ["Dark curly hair, brown eyes, thick eyebrows, short beard, athletic build", "Short red pixie cut, green eyes, freckles, delicate features", "Grey hair, neat haircut, blue eyes, laugh lines, kind smile", "Long straight black hair, dark eyes, high cheekbones, light makeup"],
+      "c.new": "New character", "c.portraits": "Drawing 4 face options…", "c.sheet": "Building the character sheet: 3 angles and voice…", "c.pick": "Pick the face", "c.pickHint": "This face will be used in every video. The other options will be deleted.", "c.choose": "Use this face", "c.reroll": "Other options",
+      "c.failed": "Failed. Credits refunded.", "c.retry": "Try again", "c.video": "Make a video", "c.voice": "Voice", "c.voiceSave": "Change voice", "c.voiceBusy": "Recording a new sample…", "c.rename": "Rename", "c.del": "Delete", "c.delQ": "Delete the character? Its videos will stay.", "c.newName": "New name:", "c.ready": "ready", "c.years": "y.o.",
+      "m.talk": "Talking to camera", "m.scene": "Scene", "m.talkHint": "The character says your text to the camera with precise lip-sync. Video length follows the text.", "m.sceneHint": "One or two characters act in the scene you describe, with lines and sound. Best for stories and dialogues.",
+      "who1": "Character", "who2": "Characters (up to two)",
+      "t.text": "What they say", "t.scene": "Where they are (optional)", "t.sceneHint": "For example: in a cosy café by the window, evening light.", "t.emotion": "Mood",
+      "emo": { neutral: "Calm", happy: "Happy", sad: "Sad", angry: "Irritated", surprised: "Surprised", fearful: "Worried" },
+      "s.scene": "What happens", "s.sceneHint": "Place, action, camera movement. For example: they walk down a rainy street at night, the camera tracks in front of them.", "s.lines": "Lines (optional, up to 4)", "s.add": "+ Line", "s.model": "Model", "s.duration": "Duration", "s.linePh": "Line text",
+      "from": "Continue from a video", "fromHint": "The new video starts from the last frame of the one you pick, so you get a series.", "fromNone": "— Start fresh —",
+      "v.go": "Make the video", "noChars": "Create a character first — then it can star in videos.",
+      "est": "≈ {s} s of speech; the final price follows the real length, any extra is refunded", "sec": "s",
+      "v.talk": "Talking", "v.scene": "Scene", "v.merge": "Merged", "v.dl": "Download", "v.cont": "Continue", "v.del": "Delete", "v.delQ": "Delete the video?", "v.work": "Shooting: {s}…", "v.queue": "Shooting…", "v.sel": "merge",
+      "v.empty": "Your videos will appear here.", "merge": "Clips selected: {n}", "mergeGo": "Merge · {p} cr.", "mergeOk": "Merging started",
+      "started": "Started! The video will appear in “My videos”.", "charStarted": "Drawing options — this takes about a minute.",
+      "buyTitle": "Top up", "buyBtn": "Buy", "soon": "Payments aren't connected yet", "noMoney": "Not enough credits.",
+      "paid": "Payment received, {n} credits added.",
+    },
+  };
+  const STAGE_EN = { "кадр и голос": "frame and voice", "последний кадр": "last frame", "видео": "video" };
+
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} }, del(k) { try { localStorage.removeItem(k); } catch {} } };
+  let L = new URLSearchParams(location.search).get("lang") === "en" ? "en" : (store.get("kd-lang") || "ru");
+  let KEY = store.get("kd-key") || "";
+  let cfg = null, st = { credits: 0, chars: [], videos: [] }, tab = "chars";
+  let mode = "talk", picked = [], lines = [], mergeSel = new Set(), candPick = {}, timer = null, wGender = "female";
+  const t = (k, vars) => { let s = T[L][k] ?? T.ru[k] ?? k; if (vars && typeof s === "string") for (const [a, b] of Object.entries(vars)) s = s.replaceAll(`{${a}}`, b); return s; };
+
+  function toast(msg, bad) { const el = $("toast"); el.textContent = msg; el.className = "toast" + (bad ? " bad" : ""); el.hidden = false; clearTimeout(el._t); el._t = setTimeout(() => el.hidden = true, bad ? 6000 : 3500); }
+  async function api(path, body) {
+    const r = await fetch(path, { method: body ? "POST" : "GET", headers: { "content-type": "application/json", "x-key": KEY }, body: body ? JSON.stringify(body) : undefined });
+    let d = {}; try { d = await r.json(); } catch {}
+    if (r.status === 401 && path !== "/api/balance") { logout(); throw new Error(d.error || t("gate.bad")); }
+    if (r.status === 402) { openBuy(); }
+    if (!r.ok) throw new Error(d.error || `Error ${r.status}`);
+    return d;
+  }
+  const busy = () => st.chars.some(c => c.status === "portraits" || c.status === "sheet" || c.voiceBusy) || st.videos.some(v => v.status === "working");
+  async function refresh() {
+    if (!KEY) return;
+    try { st = await api("/api/state"); render(); } catch {}
+    clearTimeout(timer); timer = setTimeout(refresh, busy() ? 4000 : 30000);
+  }
+
+  // ---------- текст интерфейса ----------
+  function applyText() {
+    document.documentElement.lang = L;
+    document.querySelectorAll("[data-t]").forEach(el => el.textContent = t(el.dataset.t));
+    $("langBtn").textContent = L === "ru" ? "EN" : "RU";
+    $("wLook").placeholder = t("w.lookPh"); $("wOutfit").placeholder = t("w.outfitPh");
+    $("wIdeas").innerHTML = t("ideas").map((s, i) => `<button type="button" data-i="${i}">${esc(s.split(",").slice(0, 2).join(","))}…</button>`).join("");
+    if (cfg) { fillSelects(); render(); renderPacks(); }
+  }
+  function opts(list, val) { return list.map(([v, l]) => `<option value="${esc(v)}"${String(v) === String(val) ? " selected" : ""}>${esc(l)}</option>`).join(""); }
+  function fillSelects() {
+    const C = cfg.catalog;
+    const langs = C.langs.map(l => [l.id, l.name]);
+    for (const id of ["wLang", "tLang", "sLang"]) $(id).innerHTML = opts(langs, $(id).value || L);
+    $("wVoice").innerHTML = opts(C.voices.filter(v => v.g === wGender).map(v => [v.id, v[L]]), $("wVoice").value);
+    $("tEmo").innerHTML = opts(C.emotions.map(e => [e, t("emo")[e] || e]), $("tEmo").value || "neutral");
+    $("tAspect").innerHTML = opts(C.aspects.map(a => [a, a]), $("tAspect").value || "9:16");
+    $("sModel").innerHTML = opts(C.sceneModels.map(m => [m.id, m[L] || m.ru]), $("sModel").value);
+    sceneModelChanged();
+    $("wPrice").textContent = `${C.prices.character} ${t("cr")}`;
+  }
+  function sceneModelChanged() {
+    const m = cfg.catalog.sceneModels.find(x => x.id === $("sModel").value) || cfg.catalog.sceneModels[0];
+    if (!m) return;
+    const d = $("sDur").value, a = $("sAspect").value;
+    $("sDur").innerHTML = opts(m.durations.map(x => [x, `${x} ${t("sec")}`]), m.durations.includes(+d) ? d : (m.durations.includes(8) ? 8 : m.durations[0]));
+    $("sAspect").innerHTML = opts(m.aspects.map(x => [x, x]), m.aspects.includes(a) ? a : m.aspects[0]);
+    price();
+  }
+
+  // ---------- отрисовка ----------
+  function render() {
+    $("balN").textContent = st.credits;
+    $("cntChars").textContent = st.chars.length ? st.chars.length : "";
+    $("cntVideos").textContent = st.videos.length ? st.videos.length : "";
+    renderChars(); renderComposer(); renderVideos();
+  }
+  const ready = () => st.chars.filter(c => c.status === "ready");
+
+  function renderChars() {
+    const el = $("charList");
+    const cards = st.chars.map(c => {
+      if (c.status === "pick") {
+        const sel = candPick[c.id] ?? -1;
+        return `<div class="panel picker" data-id="${c.id}">
+          <div class="foot" style="padding:0"><h3>${esc(c.name)} · ${esc(t("c.pick"))}</h3><button class="btn danger sm" data-act="del">${esc(t("c.del"))}</button></div>
+          <p class="hint" style="margin:6px 0 0">${esc(t("c.pickHint"))}</p>
+          <div class="cands">${c.candidates.map((u, i) => `<button type="button" data-cand="${i}" aria-pressed="${sel === i}"><img src="${esc(u)}" alt="${i + 1}"></button>`).join("")}</div>
+          <div class="foot"><button class="btn ghost sm" data-act="reroll">${esc(t("c.reroll"))} · ${cfg.catalog.prices.reroll} ${esc(t("cr"))}</button><button class="btn rec" data-act="pick" ${sel < 0 ? "disabled" : ""}>${esc(t("c.choose"))}</button></div>
+        </div>`;
+      }
+      const pic = c.portrait ? `<img src="${esc(c.portrait)}" alt="${esc(c.name)}" data-zoom="${esc(c.portrait)}">` : "";
+      let inner = "";
+      if (c.status === "portraits" || c.status === "sheet") inner = `<div class="wait"><div><div class="spin"></div>${esc(t(c.status === "portraits" ? "c.portraits" : "c.sheet"))}</div></div>`;
+      if (c.status === "failed") inner = `<div class="wait"><div class="fail">${esc(t("c.failed"))}</div></div>`;
+      const meta = `${c.gender === "male" ? "♂" : "♀"} ${c.age} ${t("c.years")}${c.status === "ready" ? " · " + t("c.ready") : ""}`;
+      let body = "";
+      if (c.status === "ready") {
+        const vs = cfg.catalog.voices.filter(v => v.g === c.gender);
+        body = `
+          ${c.refs.length ? `<div class="refs">${[c.portrait, ...c.refs].map(u => `<img src="${esc(u)}" alt="" data-zoom="${esc(u)}">`).join("")}</div>` : ""}
+          <div class="acts"><button class="btn rec sm" data-act="video">${esc(t("c.video"))}</button><button class="btn ghost sm" data-act="rename">${esc(t("c.rename"))}</button><button class="btn danger sm" data-act="del">${esc(t("c.del"))}</button></div>
+          <details class="voicebox"><summary class="hint" style="cursor:pointer">${esc(t("c.voice"))}: ${esc((cfg.catalog.voices.find(v => v.id === c.voice.id) || {})[L] || c.voice.id)}</summary>
+            ${c.voiceBusy ? `<p class="hint"><span class="spin" style="display:inline-block;width:14px;height:14px;border-width:2px;margin:0 6px -2px 0"></span>${esc(t("c.voiceBusy"))}</p>` : (c.sample ? `<audio controls preload="none" src="${esc(c.sample)}"></audio>` : "")}
+            <div class="row" style="grid-template-columns:1fr 1fr">
+              <select data-f="voice">${opts(vs.map(v => [v.id, v[L]]), c.voice.id)}</select>
+              <select data-f="lang">${opts(cfg.catalog.langs.map(l => [l.id, l.name]), c.sampleLang)}</select>
+            </div>
+            <label class="hint">${esc(t("w.speed"))} <input type="range" data-f="speed" min="0.7" max="1.4" step="0.05" value="${c.voice.speed}"></label>
+            <label class="hint">${esc(t("w.pitch"))} <input type="range" data-f="pitch" min="-6" max="6" step="1" value="${c.voice.pitch}"></label>
+            <button class="btn ghost sm" data-act="voice" ${c.voiceBusy ? "disabled" : ""}>${esc(t("c.voiceSave"))} · ${cfg.catalog.prices.voice} ${esc(t("cr"))}</button>
+          </details>`;
+      } else if (c.status === "failed") body = `<div class="acts"><button class="btn sm" data-act="reroll">${esc(t("c.retry"))}</button><button class="btn danger sm" data-act="del">${esc(t("c.del"))}</button></div>`;
+      else if (c.sample) body = `<audio controls preload="none" src="${esc(c.sample)}"></audio>`;
+      return `<article class="ch" data-id="${c.id}"><div class="pic">${pic}${inner}</div><div class="body"><h3>${esc(c.name)}</h3><div class="meta">${esc(meta)}</div>${body}</div></article>`;
+    });
+    // не перерисовываем, пока человек что-то трогает в карточке (открыт голос, играет звук)
+    const open = [...el.querySelectorAll("details[open]")].map(d => d.closest("[data-id]")?.dataset.id);
+    const playing = [...el.querySelectorAll("audio")].some(a => !a.paused);
+    if (playing || el.contains(document.activeElement) && document.activeElement.matches("select,input")) return;
+    el.innerHTML = `<button class="newch" id="newCh" type="button"><span><b>+</b>${esc(t("c.new"))}</span></button>` + cards.join("");
+    open.forEach(id => { const d = el.querySelector(`[data-id="${id}"] details`); if (d) d.open = true; });
+  }
+
+  function renderComposer() {
+    const rs = ready();
+    $("composer").hidden = !rs.length; $("noChars").hidden = !!rs.length;
+    picked = picked.filter(id => rs.some(c => c.id === id));
+    if (!picked.length && rs.length) picked = [rs[0].id];
+    if (mode === "talk") picked = picked.slice(0, 1);
+    $("whoLabel").textContent = t(mode === "talk" ? "who1" : "who2");
+    $("modeHint").textContent = t(mode === "talk" ? "m.talkHint" : "m.sceneHint");
+    $("who").innerHTML = rs.map(c => `<button type="button" data-id="${c.id}" aria-pressed="${picked.includes(c.id)}"><img src="${esc(c.portrait)}" alt="">${esc(c.name)}</button>`).join("");
+    document.querySelectorAll("#mode button").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === mode));
+    $("talkBox").hidden = mode !== "talk"; $("sceneBox").hidden = mode !== "scene";
+    // продолжить можно только готовое видео; в «говорит в кадр» — где есть этот персонаж
+    const cur = $("from").value;
+    const vs = st.videos.filter(v => v.status === "done" && (mode === "scene" || v.chars.includes(picked[0])));
+    $("from").innerHTML = `<option value="">${esc(t("fromNone"))}</option>` + vs.map(v => `<option value="${v.id}"${v.id === cur ? " selected" : ""}>${esc(vLabel(v))} — ${esc((v.text || v.scene || "").slice(0, 50))}</option>`).join("");
+    renderLines(); price();
+  }
+  function renderLines() {
+    const names = picked.map(id => st.chars.find(c => c.id === id)).filter(Boolean);
+    lines.forEach(l => { if (!picked.includes(l.char)) l.char = picked[0]; });
+    if (document.activeElement?.closest("#sLines")) return;
+    $("sLines").innerHTML = lines.map((l, i) => `<div class="line" data-i="${i}"><select data-f="char">${opts(names.map(c => [c.id, c.name]), l.char)}</select><input type="text" data-f="text" maxlength="220" value="${esc(l.text)}" placeholder="${esc(t("s.linePh"))}"><button type="button" class="btn ghost sm" data-f="x">✕</button></div>`).join("");
+    $("sAdd").disabled = lines.length >= 4;
+  }
+  function price() {
+    if (!cfg) return;
+    const P = cfg.catalog.prices;
+    if (mode === "talk") {
+      const s = Math.max(3, Math.min(60, Math.ceil($("tText").value.length / 14)));
+      $("vPrice").textContent = `${P.talkBase + s * P.talkPerSec} ${t("cr")}`;
+      $("vPriceNote").textContent = t("est", { s });
+      $("tCount").textContent = `${$("tText").value.length}/800`;
+    } else {
+      const d = +$("sDur").value || 8;
+      $("vPrice").textContent = `${d * (P.scenePerSec[$("sModel").value] || 3)} ${t("cr")}`;
+      $("vPriceNote").textContent = "";
+    }
+  }
+
+  const vLabel = (v) => `${v.mode === "talk" ? t("v.talk") : v.mode === "scene" ? t("v.scene") : t("v.merge")} · ${(v.charNames || []).join(" & ")}`;
+  function renderVideos() {
+    const el = $("vidList");
+    if (!st.videos.length) { el.innerHTML = `<div class="empty" style="grid-column:1/-1">${esc(t("v.empty"))}</div>`; mergeUi(); return; }
+    // не сбиваем воспроизведение: обновляем только изменившиеся карточки
+    const known = new Map([...el.querySelectorAll(".vd")].map(n => [n.dataset.id, n]));
+    const frag = document.createDocumentFragment();
+    for (const v of st.videos) {
+      const sig = `${v.status}|${v.stage}|${v.result}|${mergeSel.has(v.id)}|${L}`;
+      let n = known.get(v.id);
+      if (!n || n.dataset.sig !== sig) {
+        n = document.createElement("article");
+        n.className = `vd${v.aspect === "16:9" ? " w" : v.aspect === "1:1" ? " s" : ""}${mergeSel.has(v.id) ? " picked" : ""}`;
+        n.dataset.id = v.id; n.dataset.sig = sig;
+        const stage = L === "en" ? (STAGE_EN[v.stage] || v.stage) : v.stage;
+        const media = v.status === "done"
+          ? `<video src="${esc(v.result)}${v.poster ? "" : "#t=0.1"}" ${v.poster ? `poster="${esc(v.poster)}"` : ""} controls playsinline preload="metadata"></video>`
+          : `${v.poster ? `<img src="${esc(v.poster)}" alt="">` : ""}<div class="wait">${v.status === "working" ? `<div><div class="spin"></div>${esc(stage ? t("v.work", { s: stage }) : t("v.queue"))}</div>` : `<div class="fail">${esc(v.error || t("c.failed"))}</div>`}</div>`;
+        n.innerHTML = `${v.status === "done" ? `<label class="sel"><input type="checkbox" data-act="sel" ${mergeSel.has(v.id) ? "checked" : ""}>${esc(t("v.sel"))}</label>` : ""}
+          <div class="media">${media}</div>
+          <div class="body"><span class="tag">${esc(vLabel(v))}${v.seconds ? ` · ${v.seconds} ${esc(t("sec"))}` : v.duration ? ` · ${v.duration} ${esc(t("sec"))}` : ""} · ${esc(v.aspect || "")}</span>
+            ${v.text || v.scene ? `<div class="txt">${esc(v.text || v.scene)}</div>` : ""}
+            <div class="acts">${v.status === "done" ? `<a class="btn sm" href="${esc(v.result)}" download="kadro-${v.id}.mp4">${esc(t("v.dl"))}</a><button class="btn ghost sm" data-act="cont">${esc(t("v.cont"))}</button>` : ""}${v.status !== "working" ? `<button class="btn danger sm" data-act="vdel">${esc(t("v.del"))}</button>` : ""}</div>
+          </div>`;
+      }
+      frag.appendChild(n);
+    }
+    el.replaceChildren(frag);
+    mergeUi();
+  }
+  function mergeUi() {
+    for (const id of [...mergeSel]) if (!st.videos.some(v => v.id === id && v.status === "done")) mergeSel.delete(id);
+    $("mergeBar").hidden = mergeSel.size < 2 || tab !== "videos";
+    $("mergeTxt").textContent = t("merge", { n: mergeSel.size });
+    $("mergeGo").textContent = t("mergeGo", { p: cfg?.catalog.prices.merge ?? 1 });
+  }
+
+  // ---------- покупка ----------
+  function renderPacks() {
+    const html = cfg.packs.map(p => `<div class="pk${p.popular ? " pop" : ""}"><div><b>${esc(p.name[L] || p.name.ru)}</b><div class="mono muted">${p.credits} ${esc(t("cr"))}</div></div><button class="btn${p.popular ? " rec" : ""} sm" data-pack="${esc(p.id)}" ${cfg.stripe ? "" : "disabled"}>${esc(money(p.price))}</button></div>`).join("") + (cfg.stripe ? "" : `<p class="hint">${esc(t("soon"))}</p>`);
+    $("gatePacks").innerHTML = html; $("modalPacks").innerHTML = html;
+  }
+  const money = (n) => new Intl.NumberFormat(L === "en" ? "en-US" : "ru-RU", { style: "currency", currency: (cfg.currency || "eur").toUpperCase(), maximumFractionDigits: n % 1 ? 2 : 0 }).format(n);
+  function openBuy() { if (cfg) { renderPacks(); $("buyErr").hidden = true; $("buyModal").hidden = false; } }
+  async function buy(id, errEl) {
+    try {
+      const r = await fetch("/api/checkout", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ pack: id, key: KEY, lang: L }) });
+      const d = await r.json();
+      if (!r.ok || !d.url) throw new Error(d.error);
+      location.href = d.url;
+    } catch (e) { if (errEl) { errEl.textContent = e.message; errEl.hidden = false; } else toast(e.message, true); }
+  }
+  document.addEventListener("click", e => { const b = e.target.closest("[data-pack]"); if (b) { b.disabled = true; buy(b.dataset.pack, b.closest("#buyModal") ? $("buyErr") : null).finally(() => b.disabled = false); } });
+
+  // ---------- вход и выход ----------
+  function showStudio() {
+    $("gate").hidden = !!KEY; $("studio").hidden = !KEY;
+    $("bal").hidden = !KEY; $("topBuy").hidden = !KEY; $("codeBtn").hidden = !KEY;
+    $("codeBtn").textContent = KEY ? KEY.slice(0, 7) + "…" : "";
+    if (KEY) refresh();
+  }
+  function logout() { KEY = ""; store.del("kd-key"); st = { credits: 0, chars: [], videos: [] }; $("codeModal").hidden = true; showStudio(); }
+  async function login(code) {
+    $("codeErr").hidden = true;
+    const k = code.trim().toUpperCase();
+    const r = await fetch("/api/balance", { headers: { "x-key": k } });
+    if (!r.ok) { $("codeErr").textContent = t("gate.bad"); $("codeErr").hidden = false; return; }
+    KEY = k; store.set("kd-key", k); showStudio();
+  }
+  $("codeGo").addEventListener("click", () => login($("codeIn").value));
+  $("codeIn").addEventListener("keydown", e => { if (e.key === "Enter") login($("codeIn").value); });
+  const showCode = () => { $("codeFull").textContent = KEY; $("codeModal").hidden = false; };
+  $("codeBtn").addEventListener("click", showCode); $("bal").addEventListener("click", showCode);
+  $("logout").addEventListener("click", logout);
+  const copy = (s) => navigator.clipboard?.writeText(s).then(() => toast(t("copied"))).catch(() => {});
+  $("codeCopy").addEventListener("click", () => copy(KEY));
+  $("keyCopy").addEventListener("click", () => copy(KEY));
+  $("keyOk").addEventListener("click", () => $("keynote").hidden = true);
+  $("topBuy").addEventListener("click", openBuy);
+  document.querySelectorAll(".modal").forEach(m => m.addEventListener("click", e => { if (e.target === m || e.target.closest("[data-close]")) m.hidden = true; }));
+  document.addEventListener("keydown", e => { if (e.key === "Escape") document.querySelectorAll(".modal").forEach(m => m.hidden = true); });
+
+  // ---------- вкладки ----------
+  function setTab(n) {
+    tab = n;
+    document.querySelectorAll("[data-tab]").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === n));
+    document.querySelectorAll("[data-pane]").forEach(p => p.hidden = p.dataset.pane !== n);
+    mergeUi();
+  }
+  document.querySelectorAll("[data-tab]").forEach(b => b.addEventListener("click", () => setTab(b.dataset.tab)));
+
+  // ---------- мастер персонажа ----------
+  const openWizard = () => { $("wizard").hidden = false; setTab("chars"); $("wName").focus(); };
+  $("noCharsGo").addEventListener("click", openWizard);
+  $("wClose").addEventListener("click", () => $("wizard").hidden = true);
+  $("wGender").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; wGender = b.dataset.v; $("wGender").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); $("wVoice").value = ""; fillSelects(); });
+  $("wSpeed").addEventListener("input", () => $("wSpeedV").textContent = (+$("wSpeed").value).toFixed(2));
+  $("wPitch").addEventListener("input", () => $("wPitchV").textContent = $("wPitch").value);
+  $("wIdeas").addEventListener("click", e => { const b = e.target.closest("button"); if (b) $("wLook").value = t("ideas")[+b.dataset.i]; });
+  $("wGo").addEventListener("click", async () => {
+    const b = $("wGo"); b.disabled = true;
+    try {
+      await api("/api/chars", { name: $("wName").value, gender: wGender, age: $("wAge").value, look: $("wLook").value, outfit: $("wOutfit").value, voice: $("wVoice").value, speed: $("wSpeed").value, pitch: $("wPitch").value, lang: $("wLang").value });
+      $("wizard").hidden = true; $("wName").value = ""; $("wLook").value = ""; $("wOutfit").value = "";
+      toast(t("charStarted")); await refresh();
+    } catch (e) { toast(e.message, true); }
+    b.disabled = false;
+  });
+
+  // ---------- действия с персонажами ----------
+  $("charList").addEventListener("click", async e => {
+    if (e.target.closest("#newCh")) return openWizard();
+    const z = e.target.closest("[data-zoom]"); if (z) { $("imgBig").src = z.dataset.zoom; $("imgModal").hidden = false; return; }
+    const card = e.target.closest("[data-id]"); if (!card) return;
+    const id = card.dataset.id, c = st.chars.find(x => x.id === id);
+    const cand = e.target.closest("[data-cand]");
+    if (cand) { candPick[id] = +cand.dataset.cand; card.querySelectorAll("[data-cand]").forEach(x => x.setAttribute("aria-pressed", x === cand)); card.querySelector('[data-act="pick"]').disabled = false; return; }
+    const a = e.target.closest("[data-act]")?.dataset.act; if (!a) return;
+    const btn = e.target.closest("button"); if (btn) btn.disabled = true;
+    try {
+      if (a === "pick") await api("/api/chars/pick", { id, index: candPick[id] });
+      if (a === "reroll") await api("/api/chars/reroll", { id });
+      if (a === "del") { if (!confirm(t("c.delQ"))) { if (btn) btn.disabled = false; return; } await api("/api/chars/delete", { id }); }
+      if (a === "rename") { const n = prompt(t("c.newName"), c.name); if (n) await api("/api/chars/rename", { id, name: n }); }
+      if (a === "voice") { const q = (f) => card.querySelector(`[data-f="${f}"]`).value; await api("/api/chars/voice", { id, voice: q("voice"), lang: q("lang"), speed: q("speed"), pitch: q("pitch") }); }
+      if (a === "video") { picked = [id]; mode = "talk"; $("from").value = ""; renderComposer(); setTab("new"); }
+      await refresh();
+    } catch (err) { toast(err.message, true); }
+    if (btn) btn.disabled = false;
+  });
+
+  // ---------- композер ----------
+  $("mode").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; mode = b.dataset.v; renderComposer(); });
+  $("who").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    const id = b.dataset.id;
+    if (mode === "talk") picked = [id];
+    else if (picked.includes(id)) { if (picked.length > 1) picked = picked.filter(x => x !== id); }
+    else picked = [...picked, id].slice(-2);
+    renderComposer();
+  });
+  $("sAdd").addEventListener("click", () => { if (lines.length < 4) { lines.push({ char: picked[lines.length % picked.length] || picked[0], text: "" }); renderLines(); } });
+  $("sLines").addEventListener("input", e => { const r = e.target.closest(".line"); if (r) lines[+r.dataset.i][e.target.dataset.f] = e.target.value; });
+  $("sLines").addEventListener("change", e => { const r = e.target.closest(".line"); if (r) lines[+r.dataset.i][e.target.dataset.f] = e.target.value; });
+  $("sLines").addEventListener("click", e => { const x = e.target.closest('[data-f="x"]'); if (x) { lines.splice(+x.closest(".line").dataset.i, 1); x.blur(); renderLines(); } });
+  $("sModel").addEventListener("change", sceneModelChanged);
+  ["tText", "sDur"].forEach(id => $(id).addEventListener("input", price));
+  $("vGo").addEventListener("click", async () => {
+    const b = $("vGo"); b.disabled = true;
+    try {
+      if (mode === "talk") await api("/api/videos/talk", { char: picked[0], text: $("tText").value, scene: $("tScene").value, lang: $("tLang").value, emotion: $("tEmo").value, aspect: $("tAspect").value, from: $("from").value });
+      else await api("/api/videos/scene", { chars: picked, scene: $("sScene").value, lines: lines.filter(l => l.text.trim()), lang: $("sLang").value, model: $("sModel").value, duration: $("sDur").value, aspect: $("sAspect").value, from: $("from").value });
+      toast(t("started"));
+      if (mode === "talk") $("tText").value = ""; else { $("sScene").value = ""; lines = []; }
+      await refresh(); setTab("videos");
+    } catch (e) { toast(e.message, true); }
+    b.disabled = false;
+  });
+
+  // ---------- мои видео ----------
+  $("vidList").addEventListener("change", e => {
+    if (e.target.dataset.act !== "sel") return;
+    const id = e.target.closest(".vd").dataset.id;
+    if (e.target.checked) mergeSel.add(id); else mergeSel.delete(id);
+    e.target.closest(".vd").classList.toggle("picked", e.target.checked);
+    e.target.closest(".vd").dataset.sig = "";
+    mergeUi();
+  });
+  $("vidList").addEventListener("click", async e => {
+    const a = e.target.closest("[data-act]")?.dataset.act; if (!a || a === "sel") return;
+    const id = e.target.closest(".vd").dataset.id, v = st.videos.find(x => x.id === id);
+    if (a === "cont") {
+      mode = v.mode === "scene" || v.chars.length > 1 ? "scene" : "talk";
+      picked = v.chars.filter(cid => ready().some(c => c.id === cid)).slice(0, 2);
+      renderComposer(); $("from").value = id; setTab("new"); window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    if (a === "vdel") { if (!confirm(t("v.delQ"))) return; try { await api("/api/videos/delete", { id }); mergeSel.delete(id); await refresh(); } catch (err) { toast(err.message, true); } }
+  });
+  $("mergeX").addEventListener("click", () => { mergeSel.clear(); renderVideos(); });
+  $("mergeGo").addEventListener("click", async () => {
+    // порядок склейки — от старых к новым
+    const ids = st.videos.filter(v => mergeSel.has(v.id)).sort((a, b) => a.created - b.created).map(v => v.id);
+    try { await api("/api/videos/merge", { ids }); mergeSel.clear(); toast(t("mergeOk")); await refresh(); } catch (e) { toast(e.message, true); }
+  });
+
+  $("langBtn").addEventListener("click", () => { L = L === "ru" ? "en" : "ru"; store.set("kd-lang", L); applyText(); });
+
+  // ---------- старт ----------
+  (async () => {
+    applyText();
+    try { cfg = await (await fetch("/api/config")).json(); } catch { return toast("Network error", true); }
+    document.querySelector("#brand").textContent = cfg.brand; document.title = `${L === "en" ? "Studio" : "Студия"} — ${cfg.brand}`;
+    applyText();
+    // возврат после оплаты
+    const sid = new URLSearchParams(location.search).get("session_id");
+    if (sid) {
+      history.replaceState(null, "", "/app");
+      try {
+        const r = await fetch(`/api/checkout/confirm?session_id=${encodeURIComponent(sid)}`); const d = await r.json();
+        if (!r.ok) throw new Error(d.error);
+        const isNew = d.key !== KEY;
+        KEY = d.key; store.set("kd-key", KEY);
+        if (d.added) toast(t("paid", { n: d.added }));
+        if (isNew) { $("keyShow").textContent = KEY; $("keynote").hidden = false; }
+      } catch (e) { toast(e.message, true); }
+    }
+    showStudio();
+  })();
+})();
+</script>
+</body>
+</html>

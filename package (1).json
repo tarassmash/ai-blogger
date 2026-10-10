@@ -1,0 +1,9 @@
+{
+  "name": "kadro",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Kadro — ИИ-персонажи с постоянным лицом и голосом и короткие видео с ними",
+  "scripts": { "start": "node server.mjs" },
+  "engines": { "node": ">=20" }
+}
