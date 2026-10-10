@@ -59,8 +59,8 @@ h3 { font: 700 16px/1.3 var(--f-display); margin: 0; }
 .panel { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 20px; }
 .form { display: grid; gap: 14px; }
 .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
-label.f { display: grid; gap: 5px; font-size: 13.5px; font-weight: 700; }
-label.f small { font-weight: 500; color: var(--muted); }
+label.f, div.f { display: grid; gap: 5px; font-size: 13.5px; font-weight: 700; }
+label.f small, div.f small { font-weight: 500; color: var(--muted); }
 input[type=text], input[type=number], textarea, select { width: 100%; border: 1px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 10px; padding: 10px 12px; font: 15px var(--f-body); }
 textarea { resize: vertical; min-height: 84px; }
 input[type=range] { width: 100%; accent-color: var(--rec); }
@@ -144,6 +144,18 @@ audio { width: 100%; height: 34px; }
 .keynote code { font: 700 20px var(--f-mono); letter-spacing: .04em; }
 @media (prefers-reduced-motion: reduce) { .spin { animation-duration: 3s; } }
 @media (max-width: 640px) { .chars { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .newch { min-height: 0; grid-column: 1 / -1; padding: 14px; } .newch span { display: flex; align-items: center; gap: 10px; } .newch b { font-size: 26px; } .ch .refs img { width: 34px; height: 45px; } .bal, .lang { padding: 6px 10px; } #codeBtn { display: none; } .vids { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } }
+.presets-h { display: grid; gap: 2px; margin-top: 4px; }
+.presets { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(175px, 1fr); gap: 10px; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x proximity; }
+.preset { scroll-snap-align: start; text-align: left; display: grid; gap: 4px; align-content: start; border: 2px solid var(--line); background: var(--paper); border-radius: 14px; padding: 12px; cursor: pointer; color: var(--ink); font: inherit; min-height: 150px; }
+.preset:hover { border-color: var(--muted); }
+.preset[aria-pressed="true"] { border-color: var(--rec); background: var(--card); }
+.preset .pi { font-size: 26px; line-height: 1.1; }
+.preset b { font-size: 15px; }
+.preset .pt { font: 500 11px var(--f-mono); color: var(--rec); text-transform: uppercase; letter-spacing: .03em; }
+.preset i { font-size: 13px; color: var(--muted); line-height: 1.35; }
+.preset.rnd { border-style: dashed; }
+.ch .catch { font-style: italic; font-size: 14px; line-height: 1.35; }
+.ch .quirk { font-size: 12.5px; color: var(--muted); line-height: 1.35; }
 </style>
 </head>
 <body>
@@ -196,14 +208,20 @@ audio { width: 100%; height: 34px; }
       <div class="panel form" id="wizard" hidden style="margin-bottom:16px">
         <div class="foot" style="padding:0"><h2 data-t="w.title"></h2><button class="btn ghost sm" id="wClose" data-t="cancel"></button></div>
         <p class="hint" style="margin:0" data-t="w.rule"></p>
+        <div class="presets-h"><b data-t="pr.title"></b><span class="hint" data-t="pr.hint"></span></div>
+        <div class="presets" id="presets"></div>
         <div class="row">
           <label class="f"><span data-t="w.name"></span><input type="text" id="wName" maxlength="40"></label>
-          <label class="f"><span data-t="w.gender"></span><div class="seg" id="wGender"><button type="button" data-v="female" aria-pressed="true" data-t="w.female"></button><button type="button" data-v="male" aria-pressed="false" data-t="w.male"></button></div></label>
+          <div class="f"><span data-t="w.gender"></span><div class="seg" id="wGender"><button type="button" data-v="female" aria-pressed="true" data-t="w.female"></button><button type="button" data-v="male" aria-pressed="false" data-t="w.male"></button></div></div>
           <label class="f"><span data-t="w.age"></span><input type="number" id="wAge" min="18" max="80" value="28"></label>
         </div>
         <label class="f"><span data-t="w.look"></span><small data-t="w.lookHint"></small><textarea id="wLook" maxlength="500"></textarea></label>
         <div class="ideas" id="wIdeas"></div>
         <label class="f"><span data-t="w.outfit"></span><input type="text" id="wOutfit" maxlength="300"></label>
+        <div class="row" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
+          <label class="f"><span data-t="w.quirk"></span><small data-t="w.quirkHint"></small><input type="text" id="wQuirk" maxlength="200"></label>
+          <label class="f"><span data-t="w.catch"></span><small data-t="w.catchHint"></small><input type="text" id="wCatch" maxlength="120"></label>
+        </div>
         <div class="row">
           <label class="f"><span data-t="w.voice"></span><select id="wVoice"></select></label>
           <label class="f"><span><span data-t="w.speed"></span> <span class="mono" id="wSpeedV">1.0</span></span><input type="range" id="wSpeed" min="0.7" max="1.4" step="0.05" value="1"></label>
@@ -220,10 +238,11 @@ audio { width: 100%; height: 34px; }
       <div class="panel form" id="composer">
         <div class="seg" id="mode"><button type="button" data-v="talk" aria-pressed="true" data-t="m.talk"></button><button type="button" data-v="scene" aria-pressed="false" data-t="m.scene"></button></div>
         <p class="hint" style="margin:0" id="modeHint"></p>
-        <label class="f"><span id="whoLabel"></span><div class="who" id="who"></div></label>
+        <div class="f"><span id="whoLabel"></span><div class="who" id="who"></div></div>
 
         <div id="talkBox" class="form">
           <label class="f"><span data-t="t.text"></span><small id="tCount"></small><textarea id="tText" maxlength="800"></textarea></label>
+          <div class="ideas" id="tIdeas"></div>
           <label class="f"><span data-t="t.scene"></span><small data-t="t.sceneHint"></small><input type="text" id="tScene" maxlength="400"></label>
           <div class="row">
             <label class="f"><span data-t="lang"></span><select id="tLang"></select></label>
@@ -274,6 +293,8 @@ audio { width: 100%; height: 34px; }
       "tab.chars": "Персонажи", "tab.new": "Новое видео", "tab.videos": "Мои видео",
       "w.title": "Новый персонаж", "w.rule": "Только вымышленные взрослые люди. Не сравнивайте внешность с реальными людьми.", "w.name": "Имя", "w.gender": "Пол", "w.female": "Женщина", "w.male": "Мужчина", "w.age": "Возраст (18–80)",
       "w.look": "Внешность", "w.lookHint": "Волосы, глаза, черты лица, телосложение, особые приметы.", "w.outfit": "Одежда", "w.voice": "Голос", "w.speed": "Скорость", "w.pitch": "Тон", "w.sample": "Язык образца голоса", "w.go": "Создать 4 варианта",
+      "pr.title": "Смешные персонажи с изюминкой", "pr.hint": "Выберите готового — всё заполнится само. Поменять можно что угодно.", "pr.rnd": "Случайный", "pr.rndT": "Смешать всё наугад", "pr.rndI": "Жмите ещё раз — будет другой",
+      "w.quirk": "Изюминка ✨", "w.quirkHint": "Деталь, по которой его узнают в каждом видео: аксессуар, предмет в руках, привычка.", "w.catch": "Коронная фраза", "w.catchHint": "Он скажет её в образце голоса, её легко вставлять в ролики.", "w.quirkPh": "Например: на плече живой попугай", "w.catchPh": "Например: Спокойно, я профессионал.", "t.catch": "＋ коронная фраза",
       "w.lookPh": "Светлые волосы до плеч, серо-зелёные глаза, лёгкие веснушки, открытая улыбка, стройная.", "w.outfitPh": "Бежевый оверсайз-свитер",
       "ideas": ["Тёмные кудрявые волосы, карие глаза, густые брови, короткая борода, спортивное телосложение", "Короткая стрижка-пикси, рыжие волосы, зелёные глаза, веснушки, тонкие черты лица", "Седые волосы, аккуратная стрижка, голубые глаза, морщинки у глаз, добрая улыбка", "Длинные прямые чёрные волосы, тёмные глаза, высокие скулы, лёгкий макияж"],
       "c.new": "Новый персонаж", "c.portraits": "Рисуем 4 варианта лица…", "c.sheet": "Делаем паспорт персонажа: 3 ракурса и голос…", "c.pick": "Выберите лицо", "c.pickHint": "Это лицо будет у персонажа во всех видео. Остальные варианты удалятся.", "c.choose": "Выбрать это лицо", "c.reroll": "Другие варианты",
@@ -300,6 +321,8 @@ audio { width: 100%; height: 34px; }
       "tab.chars": "Characters", "tab.new": "New video", "tab.videos": "My videos",
       "w.title": "New character", "w.rule": "Fictional adults only. Don't compare the looks to real people.", "w.name": "Name", "w.gender": "Gender", "w.female": "Woman", "w.male": "Man", "w.age": "Age (18–80)",
       "w.look": "Looks", "w.lookHint": "Hair, eyes, facial features, build, distinctive marks.", "w.outfit": "Outfit", "w.voice": "Voice", "w.speed": "Speed", "w.pitch": "Pitch", "w.sample": "Voice sample language", "w.go": "Create 4 options",
+      "pr.title": "Funny characters with a twist", "pr.hint": "Pick a ready-made one and the form fills itself. Change anything you like.", "pr.rnd": "Random", "pr.rndT": "Mix it all up", "pr.rndI": "Click again for another",
+      "w.quirk": "Signature twist ✨", "w.quirkHint": "The detail that makes them recognisable in every video: an accessory, a prop, a habit.", "w.catch": "Catchphrase", "w.catchHint": "They say it in the voice sample, and it's easy to drop into videos.", "w.quirkPh": "For example: a live parrot on the shoulder", "w.catchPh": "For example: Relax, I'm a professional.", "t.catch": "＋ catchphrase",
       "w.lookPh": "Shoulder-length blond hair, grey-green eyes, light freckles, open smile, slim.", "w.outfitPh": "Beige oversized sweater",
       "ideas": ["Dark curly hair, brown eyes, thick eyebrows, short beard, athletic build", "Short red pixie cut, green eyes, freckles, delicate features", "Grey hair, neat haircut, blue eyes, laugh lines, kind smile", "Long straight black hair, dark eyes, high cheekbones, light makeup"],
       "c.new": "New character", "c.portraits": "Drawing 4 face options…", "c.sheet": "Building the character sheet: 3 angles and voice…", "c.pick": "Pick the face", "c.pickHint": "This face will be used in every video. The other options will be deleted.", "c.choose": "Use this face", "c.reroll": "Other options",
@@ -319,6 +342,98 @@ audio { width: 100%; height: 34px; }
       "paid": "Payment received, {n} credits added.",
     },
   };
+  // ---------- подборка смешных персонажей с изюминкой ----------
+  const PRESETS = [
+    { id: "plumber", icon: "🔧", tag: "Сантехник-философ", name: "Геннадий", gender: "male", age: 52, voice: "Deep_Voice_Man", speed: 0.95, pitch: -1,
+      look: "Крепкий мужчина с густыми усами-подковой, добрые хитрые глаза, румяные щёки, небольшой животик",
+      outfit: "Синий рабочий комбинезон поверх тельняшки",
+      quirk: "в руке всегда огромный разводной ключ, за ухом карандаш, на лбу очки для чтения",
+      catch: "Тут, дружище, дело не в трубах. Тут дело в жизни.",
+      ideas: ["Почему кран капает? Потому что ты его не слушаешь. Вот смотри: каждая капля — это маленькое «потом». Потом починю, потом позвоню маме. Тут, дружище, дело не в трубах. Тут дело в жизни.", "Три вещи, которые мужчина должен уметь: поменять прокладку в кране, признать, что был неправ, и не трогать то, что работает.", "Мне сегодня клиент говорит: «Геннадий, а вы диплом философа где получали?» Я говорю: в подвале на Ленина, двадцать лет стажа."] },
+    { id: "gamergran", icon: "🎮", tag: "Бабушка-геймер", name: "Зинаида", gender: "female", age: 74, voice: "Wise_Woman", speed: 1.05, pitch: 0,
+      look: "Бодрая пожилая женщина с седыми волосами в аккуратном пучке, озорные глаза, круглые очки, морщинки от смеха",
+      outfit: "Вязаная кофта с узором и цветастый платок на плечах",
+      quirk: "поверх пучка огромные игровые наушники с разноцветной подсветкой, рядом кружка чая с вареньем",
+      catch: "Внучек, это не баг. Это фича.",
+      ideas: ["Внучек мне говорит: бабушка, ты опять всю ночь играла? А я говорю: не всю, а до рассвета. Это разные вещи.", "Совет от бабушки: если в игре не получается пройти уровень — поешь пирожков и попробуй ещё раз. Работает и в жизни.", "Меня спрашивают, сколько мне лет. Отвечаю: семьдесят четыре уровня опыта. И ни одного сохранения."] },
+    { id: "startup", icon: "🚀", tag: "Вечный стартапер", name: "Стас", gender: "male", age: 31, voice: "Casual_Guy", speed: 1.15, pitch: 1,
+      look: "Худощавый мужчина с идеальной укладкой, белоснежная широкая улыбка, горящие глаза, лёгкая щетина",
+      outfit: "Стёганый жилет поверх белой футболки",
+      quirk: "держит сразу три телефона веером, на шее бейдж с конференции, в другой руке стаканчик кофе",
+      catch: "Это как такси, только для котов!",
+      ideas: ["Слушай, у меня идея на миллион. Это как такси, только для котов! Кот вызывает машину, едет к другому коту. Инвесторы, пишите в директ.", "За неделю я запустил три стартапа, закрыл два и один продал маме. Она пока не знает, что купила.", "Главное в бизнесе — питч. Смотри: «Мы меняем мир». Чем? Неважно. Главное — как я это говорю."] },
+    { id: "drama", icon: "💅", tag: "Королева драмы", name: "Марго", gender: "female", age: 38, voice: "Inspirational_girl", speed: 1.0, pitch: 1,
+      look: "Эффектная женщина с пышной ярко-рыжей укладкой, длинные ресницы, выразительные брови, яркая помада",
+      outfit: "Шёлковый халат с перьями",
+      quirk: "огромные солнцезащитные очки в пол-лица и розовое боа из перьев, даже дома",
+      catch: "Я не драматизирую. Я так живу.",
+      ideas: ["Сегодня в магазине закончилось моё любимое молоко. Я стояла у полки три минуты. Молча. Как в кино. Я не драматизирую. Я так живу.", "Мне написали «ок». Не «окей», не «хорошо», а «ок». Девочки, это конец отношений?", "Утро начинается не с кофе. Утро начинается с того, что я выбираю, кого сегодня простить."] },
+    { id: "dacha", icon: "🥒", tag: "Строгий дачник", name: "Пётр Ильич", gender: "male", age: 66, voice: "Patient_Man", speed: 0.9, pitch: -2,
+      look: "Загорелый пожилой мужчина с густыми седыми бровями, строгий прищур, обветренное лицо, крепкие руки",
+      outfit: "Клетчатая рубашка с закатанными рукавами и старая жилетка",
+      quirk: "соломенная шляпа и огромный кабачок в руках, который он держит как трофей",
+      catch: "Кабачок — это не овощ. Это характер.",
+      ideas: ["Соседи спрашивают, почему у меня кабачки больше, чем у них. Потому что я с ними разговариваю. Строго, но справедливо.", "Молодёжь едет на море. А настоящий отдых — это прополка в шесть утра. Кабачок — это не овощ. Это характер.", "Внимание, урожай года! Сорок два кабачка. Варенье из кабачков будет у всех. Отказы не принимаются."] },
+    { id: "catguy", icon: "😺", tag: "Кот в теле человека", name: "Лёша", gender: "male", age: 27, voice: "Young_Knight", speed: 0.88, pitch: 0,
+      look: "Молодой мужчина с растрёпанными волосами, сонные полуприкрытые глаза, довольная ленивая улыбка",
+      outfit: "Мягкая пижама-комбинезон серого цвета",
+      quirk: "на голове капюшон с кошачьими ушками, в руках огромная кружка какао с маршмеллоу",
+      catch: "Сначала поспим. Потом посмотрим.",
+      ideas: ["Мой план на день: поспать, поесть, полежать на солнышке и снова поспать. Сначала поспим. Потом посмотрим.", "Если на столе что-то лежит — это надо уронить. Я не знаю почему. Просто надо.", "Начальник спрашивает, где отчёт. А я смотрю на него и медленно моргаю. Это значит «люблю». Должно сработать."] },
+    { id: "teacher", icon: "📏", tag: "Завуч на пенсии", name: "Инна Сергеевна", gender: "female", age: 61, voice: "Abbess", speed: 0.95, pitch: -1,
+      look: "Строгая женщина с высоким пучком, очки на цепочке, поджатые губы, но смешинки в глазах",
+      outfit: "Тёмно-синий костюм с брошью",
+      quirk: "в руке деревянная указка, в нагрудном кармане красная ручка, которой она всё исправляет",
+      catch: "Повтори. Но уже без ошибок.",
+      ideas: ["Мне в сообщении написали «щас». Не «сейчас», а «щас». Два. Повтори. Но уже без ошибок.", "Тридцать лет в школе научили меня главному: по шагам в коридоре я знаю, кто не сделал домашку.", "Сегодня в магазине я поставила оценку кассиру. Четыре с минусом. За вежливость плюс, за сдачу минус."] },
+    { id: "nerdbuff", icon: "💪", tag: "Качок-ботаник", name: "Арнольд", gender: "male", age: 35, voice: "Determined_Man", speed: 1.0, pitch: -1,
+      look: "Огромный мускулистый мужчина с квадратной челюстью, короткий ёжик, добрые застенчивые глаза",
+      outfit: "Вязаный жилет поверх рубашки, которая трещит на бицепсах",
+      quirk: "маленькие круглые очки и толстая книга по высшей математике в руке",
+      catch: "Мышцы — это белок. А интеграл — это любовь.",
+      ideas: ["Люди думают, что я хожу в зал ради мышц. Нет. Я хожу, чтобы носить больше книг за раз.", "Сегодня жим лёжа: сто двадцать килограммов. А потом решил три задачи по топологии. Хороший день.", "Мышцы — это белок. А интеграл — это любовь. Подписывайтесь, расскажу, как это связано."] },
+    { id: "influ", icon: "🤳", tag: "Блогер-неудачница", name: "Вика", gender: "female", age: 24, voice: "Lively_Girl", speed: 1.15, pitch: 1,
+      look: "Молодая девушка с идеальным макияжем, длинные светлые волосы, с одной стороны слегка растрёпаны, широкая неловкая улыбка",
+      outfit: "Розовый оверсайз-худи",
+      quirk: "рядом всегда кольцевая лампа, а на щеке забытая наклейка-патч под глаз",
+      catch: "Это не провал. Это контент!",
+      ideas: ["Всем привет, сегодня покажу идеальное утро! Так, кофе пролился, кот сел на тональник, лампа упала. Это не провал. Это контент!", "Мой охват вчера: три человека. Мама, бабушка и я со второго аккаунта. Растём!", "Распаковка! Мне прислали… а, нет, это я себе сама заказала. Всё равно распаковка!"] },
+    { id: "taxi", icon: "🚕", tag: "Таксист-эксперт", name: "Дядя Вова", gender: "male", age: 48, voice: "Casual_Guy", speed: 1.05, pitch: -2,
+      look: "Мужчина с трёхдневной щетиной, хитрый прищур, загорелые руки, залысины",
+      outfit: "Кожаная куртка поверх полосатого свитера",
+      quirk: "деревянная массажная накидка из бусин на плечах и зубочистка в уголке рта",
+      catch: "Я тебе так скажу…",
+      ideas: ["Я тебе так скажу: экономика — это как пробка. Все стоят, а виноват всегда тот, кто впереди.", "Пассажир спрашивает: а вы в политике разбираетесь? Я говорю: я в такси двадцать лет. Я разбираюсь во всём.", "Короче, лайфхак: если навигатор говорит налево — езжай направо. Я тебе так скажу, он не местный."] },
+    { id: "psychic", icon: "🔮", tag: "Гадалка из подъезда", name: "Мадам Жози", gender: "female", age: 57, voice: "Wise_Woman", speed: 0.92, pitch: -2,
+      look: "Женщина с пышными тёмными кудрями, густые подведённые глаза, много колец на пальцах, загадочная улыбка",
+      outfit: "Цветастая шаль с бахромой и множество бус",
+      quirk: "вместо хрустального шара круглый аквариум с золотой рыбкой, в который она многозначительно смотрит",
+      catch: "Вижу… вижу… ты опять не помыл посуду.",
+      ideas: ["Вижу… вижу… ты опять не помыл посуду. И карты тут ни при чём. Это видно по твоему лицу.", "Гороскоп на неделю. Овны: ешьте суп. Тельцы: тоже ешьте суп. Остальные: не спорьте с мамой.", "Рыбка сказала, что в пятницу тебя ждёт большая удача. Правда, она всегда так говорит. Но рыбка ещё ни разу не ошиблась."] },
+    { id: "coach", icon: "📣", tag: "Тренер по позитиву", name: "Роман", gender: "male", age: 40, voice: "Determined_Man", speed: 1.2, pitch: 1,
+      look: "Мужчина с блестящей лысиной, огромная улыбка во все зубы, загорелый, спортивное телосложение",
+      outfit: "Ярко-жёлтый спортивный костюм",
+      quirk: "на шее свисток, на голове махровая повязка, большие пальцы всегда подняты вверх",
+      catch: "Отлично! А теперь — ещё лучше!",
+      ideas: ["Проснулся? Отлично! А теперь — ещё лучше! Встал с кровати! Почистил зубы! Ты чемпион!", "Опоздал на работу? Отлично! Значит, ты хорошо выспался! Видишь, во всём есть плюс!", "Упражнение дня: улыбнись. Шире. Ещё шире. Соседи смотрят странно? Отлично! Значит, ты на верном пути!"] },
+  ];
+  // для «Случайного» персонажа
+  const RND = {
+    female: { names: ["Тамара", "Люся", "Снежана", "Ольга", "Кира", "Фаина"], looks: ["Пышные кудрявые волосы, веснушки, курносый нос, широкая улыбка", "Короткая стрижка с чёлкой, большие удивлённые глаза, ямочки на щеках", "Высокая причёска, яркие брови, пухлые губы, хитрый взгляд"] },
+    male: { names: ["Эдуард", "Боря", "Аркадий", "Жора", "Валера", "Феликс"], looks: ["Пышные бакенбарды, лохматые брови, нос картошкой, весёлые глаза", "Аккуратная бородка клинышком, зачёсанные назад волосы, серьёзное лицо", "Рыжая борода лопатой, густые волосы, широкая добродушная улыбка"] },
+    ages: [24, 29, 33, 41, 47, 55, 63, 70],
+    outfits: ["Яркая гавайская рубашка", "Строгий костюм-тройка", "Спортивный костюм с лампасами", "Свитер с оленями", "Халат и тапочки-зайцы", "Комбинезон в горошек"],
+    quirks: ["на голове шапочка из фольги", "на плече живой попугай", "в руке половник, как скипетр", "очки в форме сердечек", "на шее гирлянда из сушек", "бигуди в волосах в любой ситуации", "в зубах колосок, как у ковбоя", "огромный бант на голове", "в руках резиновая уточка", "монокль и пышные накрученные усы"],
+    catches: ["Ну что, поехали!", "Я так и знал(а)!", "Спокойно, я профессионал.", "Это была шутка. Или нет.", "Без паники, у меня есть план.", "А можно мне просто тортик?", "Жизнь — боль, но с юмором.", "Не учите меня жить, лучше помогите материально."],
+  };
+  const VOICE_IDS = { female: ["Wise_Woman", "Calm_Woman", "Lively_Girl", "Inspirational_girl", "Sweet_Girl_2", "Exuberant_Girl", "Abbess"], male: ["Deep_Voice_Man", "Casual_Guy", "Patient_Man", "Determined_Man", "Elegant_Man", "Young_Knight", "Imposing_Manner"] };
+  const GENERIC_IDEAS = ["Три вещи, которые я никогда не делаю по утрам. Первая — не спорю с будильником. Вторая — не смотрю в зеркало до кофе. Третья — секрет.", "Вы спрашивали, как у меня дела. Отвечаю честно: лучше всех, просто никто не завидует.", "Сейчас расскажу секрет, который никому не рассказывал. Только никому, договорились?"];
+  const pickR = (a) => a[Math.floor(Math.random() * a.length)];
+  function randomPreset() {
+    const g = Math.random() < 0.5 ? "female" : "male";
+    return { id: "", icon: "🎲", name: pickR(RND[g].names), gender: g, age: pickR(RND.ages), look: pickR(RND[g].looks), outfit: pickR(RND.outfits), quirk: pickR(RND.quirks), catch: pickR(RND.catches), voice: pickR(VOICE_IDS[g]), speed: 1, pitch: 0 };
+  }
+
   const STAGE_EN = { "кадр и голос": "frame and voice", "последний кадр": "last frame", "видео": "video" };
 
   const $ = (id) => document.getElementById(id);
@@ -351,7 +466,8 @@ audio { width: 100%; height: 34px; }
     document.documentElement.lang = L;
     document.querySelectorAll("[data-t]").forEach(el => el.textContent = t(el.dataset.t));
     $("langBtn").textContent = L === "ru" ? "EN" : "RU";
-    $("wLook").placeholder = t("w.lookPh"); $("wOutfit").placeholder = t("w.outfitPh");
+    $("wLook").placeholder = t("w.lookPh"); $("wOutfit").placeholder = t("w.outfitPh"); $("wQuirk").placeholder = t("w.quirkPh"); $("wCatch").placeholder = t("w.catchPh");
+    renderPresets();
     $("wIdeas").innerHTML = t("ideas").map((s, i) => `<button type="button" data-i="${i}">${esc(s.split(",").slice(0, 2).join(","))}…</button>`).join("");
     if (cfg) { fillSelects(); render(); renderPacks(); }
   }
@@ -420,7 +536,7 @@ audio { width: 100%; height: 34px; }
           </details>`;
       } else if (c.status === "failed") body = `<div class="acts"><button class="btn sm" data-act="reroll">${esc(t("c.retry"))}</button><button class="btn danger sm" data-act="del">${esc(t("c.del"))}</button></div>`;
       else if (c.sample) body = `<audio controls preload="none" src="${esc(c.sample)}"></audio>`;
-      return `<article class="ch" data-id="${c.id}"><div class="pic">${pic}${inner}</div><div class="body"><h3>${esc(c.name)}</h3><div class="meta">${esc(meta)}</div>${body}</div></article>`;
+      return `<article class="ch" data-id="${c.id}"><div class="pic">${pic}${inner}</div><div class="body"><h3>${esc(c.name)}</h3><div class="meta">${esc(meta)}</div>${c.catch ? `<div class="catch">«${esc(c.catch)}»</div>` : ""}${c.quirk ? `<div class="quirk">✨ ${esc(c.quirk)}</div>` : ""}${body}</div></article>`;
     });
     // не перерисовываем, пока человек что-то трогает в карточке (открыт голос, играет звук)
     const open = [...el.querySelectorAll("details[open]")].map(d => d.closest("[data-id]")?.dataset.id);
@@ -445,7 +561,14 @@ audio { width: 100%; height: 34px; }
     const cur = $("from").value;
     const vs = st.videos.filter(v => v.status === "done" && (mode === "scene" || v.chars.includes(picked[0])));
     $("from").innerHTML = `<option value="">${esc(t("fromNone"))}</option>` + vs.map(v => `<option value="${v.id}"${v.id === cur ? " selected" : ""}>${esc(vLabel(v))} — ${esc((v.text || v.scene || "").slice(0, 50))}</option>`).join("");
-    renderLines(); price();
+    renderTalkIdeas(); renderLines(); price();
+  }
+  function renderTalkIdeas() {
+    const c = st.chars.find(x => x.id === picked[0]);
+    if (!c || mode !== "talk") { $("tIdeas").innerHTML = ""; return; }
+    const ideas = PRESETS.find(p => p.id === c.preset)?.ideas || GENERIC_IDEAS;
+    $("tIdeas").innerHTML = (c.catch ? `<button type="button" data-catch>${esc(t("t.catch"))}</button>` : "") + ideas.map((x, i) => `<button type="button" data-idea="${i}">💡 ${esc(x.slice(0, 42))}…</button>`).join("");
+    $("tIdeas").dataset.char = c.id;
   }
   function renderLines() {
     const names = picked.map(id => st.chars.find(c => c.id === id)).filter(Boolean);
@@ -567,12 +690,27 @@ audio { width: 100%; height: 34px; }
   $("wGender").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; wGender = b.dataset.v; $("wGender").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); $("wVoice").value = ""; fillSelects(); });
   $("wSpeed").addEventListener("input", () => $("wSpeedV").textContent = (+$("wSpeed").value).toFixed(2));
   $("wPitch").addEventListener("input", () => $("wPitchV").textContent = $("wPitch").value);
+  let wPreset = "";
+  function renderPresets() {
+    $("presets").innerHTML = PRESETS.map(p => `<button type="button" class="preset" data-p="${p.id}" aria-pressed="${wPreset === p.id}"><span class="pi">${p.icon}</span><b>${esc(p.name)}</b><span class="pt">${esc(p.tag)}</span><i>«${esc(p.catch)}»</i></button>`).join("")
+      + `<button type="button" class="preset rnd" data-p="random"><span class="pi">🎲</span><b>${esc(t("pr.rnd"))}</b><span class="pt">${esc(t("pr.rndT"))}</span><i>${esc(t("pr.rndI"))}</i></button>`;
+  }
+  function applyPreset(p) {
+    wPreset = p.id;
+    $("wName").value = p.name; $("wAge").value = p.age; $("wLook").value = p.look; $("wOutfit").value = p.outfit; $("wQuirk").value = p.quirk; $("wCatch").value = p.catch;
+    wGender = p.gender; $("wGender").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x.dataset.v === p.gender));
+    if (cfg) fillSelects();
+    $("wVoice").value = p.voice;
+    $("wSpeed").value = p.speed; $("wSpeedV").textContent = (+p.speed).toFixed(2); $("wPitch").value = p.pitch; $("wPitchV").textContent = p.pitch;
+    renderPresets();
+  }
+  $("presets").addEventListener("click", e => { const b = e.target.closest("[data-p]"); if (!b) return; applyPreset(b.dataset.p === "random" ? randomPreset() : PRESETS.find(p => p.id === b.dataset.p)); });
   $("wIdeas").addEventListener("click", e => { const b = e.target.closest("button"); if (b) $("wLook").value = t("ideas")[+b.dataset.i]; });
   $("wGo").addEventListener("click", async () => {
     const b = $("wGo"); b.disabled = true;
     try {
-      await api("/api/chars", { name: $("wName").value, gender: wGender, age: $("wAge").value, look: $("wLook").value, outfit: $("wOutfit").value, voice: $("wVoice").value, speed: $("wSpeed").value, pitch: $("wPitch").value, lang: $("wLang").value });
-      $("wizard").hidden = true; $("wName").value = ""; $("wLook").value = ""; $("wOutfit").value = "";
+      await api("/api/chars", { preset: wPreset, quirk: $("wQuirk").value, catch: $("wCatch").value, name: $("wName").value, gender: wGender, age: $("wAge").value, look: $("wLook").value, outfit: $("wOutfit").value, voice: $("wVoice").value, speed: $("wSpeed").value, pitch: $("wPitch").value, lang: $("wLang").value });
+      $("wizard").hidden = true; ["wName", "wLook", "wOutfit", "wQuirk", "wCatch"].forEach(id => $(id).value = ""); wPreset = ""; renderPresets();
       toast(t("charStarted")); await refresh();
     } catch (e) { toast(e.message, true); }
     b.disabled = false;
@@ -609,6 +747,13 @@ audio { width: 100%; height: 34px; }
     else if (picked.includes(id)) { if (picked.length > 1) picked = picked.filter(x => x !== id); }
     else picked = [...picked, id].slice(-2);
     renderComposer();
+  });
+  $("tIdeas").addEventListener("click", e => {
+    const c = st.chars.find(x => x.id === $("tIdeas").dataset.char); if (!c) return;
+    const ta = $("tText");
+    if (e.target.closest("[data-catch]")) ta.value = (ta.value.trim() ? ta.value.trim() + " " : "") + c.catch;
+    const i = e.target.closest("[data-idea]"); if (i) ta.value = (PRESETS.find(p => p.id === c.preset)?.ideas || GENERIC_IDEAS)[+i.dataset.idea];
+    ta.focus(); price();
   });
   $("sAdd").addEventListener("click", () => { if (lines.length < 4) { lines.push({ char: picked[lines.length % picked.length] || picked[0], text: "" }); renderLines(); } });
   $("sLines").addEventListener("input", e => { const r = e.target.closest(".line"); if (r) lines[+r.dataset.i][e.target.dataset.f] = e.target.value; });

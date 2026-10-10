@@ -1578,12 +1578,14 @@ var REAL = /(похож(ий|ая|ее|е)?\s+на|похожа\s+на|двой�
 function checkFictional(...texts) {
   if (texts.some((t) => REAL.test(t || ""))) throw new UserError("\u041F\u0435\u0440\u0441\u043E\u043D\u0430\u0436\u0438 \u0434\u043E\u043B\u0436\u043D\u044B \u0431\u044B\u0442\u044C \u0432\u044B\u043C\u044B\u0448\u043B\u0435\u043D\u043D\u044B\u043C\u0438. \u041E\u043F\u0438\u0448\u0438\u0442\u0435 \u0432\u043D\u0435\u0448\u043D\u043E\u0441\u0442\u044C \u0441\u0432\u043E\u0438\u043C\u0438 \u0441\u043B\u043E\u0432\u0430\u043C\u0438, \u0431\u0435\u0437 \u0441\u0440\u0430\u0432\u043D\u0435\u043D\u0438\u044F \u0441 \u0440\u0435\u0430\u043B\u044C\u043D\u044B\u043C\u0438 \u043B\u044E\u0434\u044C\u043C\u0438.");
 }
-var IDENTITY = "Keep the exact same person: identical face, facial features, skin tone, age, hairstyle, hair colour, body type and the same clothes.";
+var IDENTITY = "Keep the exact same person: identical face, facial features, skin tone, age, hairstyle, hair colour, body type, the same clothes and the same signature accessories and details.";
 function portraitPrompt(c) {
   return [
     `Photorealistic head-and-shoulders portrait photograph of a fictional ${c.age}-year-old ${gw(c.gender)}.`,
     c.look ? `Appearance: ${c.look}.` : "",
     c.outfit ? `Clothing: ${c.outfit}.` : "",
+    c.quirk ? `Signature detail that makes this character instantly recognisable: ${c.quirk}. Make it clearly visible.` : "",
+    c.quirk || c.catch ? "Characterful, warm and slightly comedic expression, like a memorable sitcom character, while staying a natural photorealistic person." : "",
     "The person is entirely fictional and must not resemble any real or famous person.",
     "Facing the camera, relaxed natural expression, natural skin texture with visible pores, soft even studio lighting, plain light grey background, sharp focus, 85mm lens.",
     "No text, no watermark, no logo."
@@ -1598,7 +1600,7 @@ var SAMPLE = {
   ru: (c) => `\u041F\u0440\u0438\u0432\u0435\u0442! \u041C\u0435\u043D\u044F \u0437\u043E\u0432\u0443\u0442 ${c.name}. ${c.gender === "male" ? "\u0420\u0430\u0434" : "\u0420\u0430\u0434\u0430"} \u0437\u043D\u0430\u043A\u043E\u043C\u0441\u0442\u0432\u0443 \u2014 \u0434\u0430\u0432\u0430\u0439 \u0441\u043D\u0438\u043C\u0435\u043C \u0447\u0442\u043E-\u043D\u0438\u0431\u0443\u0434\u044C \u043A\u043B\u0430\u0441\u0441\u043D\u043E\u0435.`,
   en: (c) => `Hi! I'm ${c.name}. Nice to meet you \u2014 let's make something great together.`
 };
-var sampleText = (c) => (SAMPLE[c.sampleLang] || SAMPLE.en)(c);
+var sampleText = (c) => c.catch ? `${c.sampleLang === "ru" ? "\u041F\u0440\u0438\u0432\u0435\u0442! \u041C\u0435\u043D\u044F \u0437\u043E\u0432\u0443\u0442" : "Hi! I'm"} ${c.name}. ${c.catch}` : (SAMPLE[c.sampleLang] || SAMPLE.en)(c);
 async function startTTS(text, voice, lang2, gender, emotion = "neutral") {
   const L = langById(lang2);
   const input = (vid) => ({
@@ -1639,13 +1641,16 @@ async function create(key, b) {
     outfit: clean2(b.outfit, 300),
     sampleLang: LANGS.some((l) => l.id === b.lang) ? b.lang : "ru",
     voice: { id: voiceById(b.voice)?.id || defaultVoice(b.gender), speed: Math.max(0.7, Math.min(1.4, Number(b.speed) || 1)), pitch: Math.max(-6, Math.min(6, parseInt(b.pitch, 10) || 0)) },
+    quirk: clean2(b.quirk, 200),
+    catch: clean2(b.catch, 120),
+    preset: clean2(b.preset, 20).replace(/[^\w-]/g, ""),
     candidates: [],
     refs: [],
     status: "portraits"
   };
   if (!c.name) throw new UserError("\u0414\u0430\u0439\u0442\u0435 \u043F\u0435\u0440\u0441\u043E\u043D\u0430\u0436\u0443 \u0438\u043C\u044F.");
   if (c.look.length < 10) throw new UserError("\u041E\u043F\u0438\u0448\u0438\u0442\u0435 \u0432\u043D\u0435\u0448\u043D\u043E\u0441\u0442\u044C \u0445\u043E\u0442\u044F \u0431\u044B \u043F\u0430\u0440\u043E\u0439 \u0444\u0440\u0430\u0437: \u0432\u043E\u043B\u043E\u0441\u044B, \u0433\u043B\u0430\u0437\u0430, \u0447\u0435\u0440\u0442\u044B \u043B\u0438\u0446\u0430.");
-  checkFictional(c.name, c.look, c.outfit);
+  checkFictional(c.name, c.look, c.outfit, c.quirk, c.catch);
   const price = prices().character;
   charge(key, price);
   c.paid = price;
@@ -1818,6 +1823,9 @@ var summary = (c) => ({
   age: c.age,
   look: c.look,
   outfit: c.outfit,
+  quirk: c.quirk || "",
+  catch: c.catch || "",
+  preset: c.preset || "",
   voice: c.voice,
   sampleLang: c.sampleLang,
   status: c.status,
@@ -1916,9 +1924,10 @@ async function createTalk(key, b, origin2) {
       const prompt = [
         "The person shown in the reference images (all images show the same person from different angles).",
         "Keep the exact same face, facial features, skin tone, age, hairstyle and body type.",
+        c.quirk ? `Keep the character's signature detail clearly visible: ${c.quirk}.` : "",
         scene ? `Scene: ${scene}. Keep the same clothes unless the scene describes different clothing.` : "Setting: a clean, softly lit modern room. Keep the same clothes.",
         `Medium close-up from the chest up, the person faces the camera and looks straight into the lens, mouth closed, natural expression, ready to speak. Flattering natural light, photorealistic, ${frameWord(aspect)} frame. No text, no watermark.`
-      ].join(" ");
+      ].filter(Boolean).join(" ");
       const r = await submit2(EDIT_MODEL, { prompt, image_urls: images, num_images: 1, aspect_ratio: aspect, resolution: "2K", output_format: "jpeg" }, ["resolution", "output_format"]);
       v.jobs.frame = r.ok ? r.job : { failed: r.error.admin };
     }
@@ -1940,7 +1949,7 @@ function scenePrompt(model, chars, scene, lines, lang2, frameIdx, audioIdx) {
     let n = 0;
     const who = chars.map((c, i) => {
       const imgs = c._imgs.map(() => `@Image${++n}`).join(", ");
-      return `- ${c.name}, a ${c.age}-year-old ${gw2(c.gender)}: ${imgs} show this same person.${audioIdx[i] ? ` Voice: @Audio${audioIdx[i]}.` : ""}`;
+      return `- ${c.name}, a ${c.age}-year-old ${gw2(c.gender)}: ${imgs} show this same person.${c.quirk ? ` Signature detail: ${c.quirk}.` : ""}${audioIdx[i] ? ` Voice: @Audio${audioIdx[i]}.` : ""}`;
     });
     return [
       "Photorealistic cinematic video with natural motion and real-world physics.",
