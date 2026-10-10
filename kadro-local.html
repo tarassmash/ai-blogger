@@ -1,0 +1,994 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kadro — студия на компьютере</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23141414'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%23ff4a2e'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>/* Layout: studio app — top bar with balance, three tabs (characters, new video, my videos), sticky merge bar. */
+:root {
+  --paper: #f3f1ec; --card: #ffffff; --ink: #151413; --muted: #625d56; --line: #dcd6cc; --soft: #e9e5dd;
+  --rec: #e5402a; --rec-ink: #ffffff; --ok: #1f7a4d; --warn: #9a6400;
+  --f-display: "Unbounded", "Manrope", system-ui, sans-serif;
+  --f-body: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --paper: #0f0f10; --card: #18181a; --ink: #f1eee8; --muted: #a39e96; --line: #2b2a2d; --soft: #212024; --rec: #ff5a3c; --rec-ink: #0f0f10; --ok: #5fd39a; --warn: #f0c150; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --paper: #0f0f10; --card: #18181a; --ink: #f1eee8; --muted: #a39e96; --line: #2b2a2d; --soft: #212024; --rec: #ff5a3c; --rec-ink: #0f0f10; --ok: #5fd39a; --warn: #f0c150; color-scheme: dark; }
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--paper); color: var(--ink); font: 16px/1.5 var(--f-body); -webkit-font-smoothing: antialiased; padding-bottom: 90px; }
+[hidden] { display: none !important; }
+img, video, audio { max-width: 100%; display: block; }
+:focus-visible { outline: 2px solid var(--rec); outline-offset: 2px; }
+.wrap { max-width: 1160px; margin: 0 auto; padding-inline: 16px; }
+.mono { font-family: var(--f-mono); font-size: 13px; }
+.muted { color: var(--muted); }
+h2 { font: 700 22px/1.2 var(--f-display); letter-spacing: -.01em; margin: 0 0 6px; }
+h3 { font: 700 16px/1.3 var(--f-display); margin: 0; }
+
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-block: 14px; flex-wrap: wrap; }
+.logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); font: 700 18px/1 var(--f-display); }
+.logo i { width: 26px; height: 26px; border-radius: 8px; background: var(--ink); position: relative; flex: none; }
+.logo i::after { content: ""; position: absolute; width: 9px; height: 9px; border-radius: 50%; background: var(--rec); left: 8.5px; top: 8.5px; }
+.right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.bal { font: 500 14px var(--f-mono); border: 1px solid var(--line); border-radius: 999px; padding: 7px 12px; background: var(--card); }
+.bal b { color: var(--rec); }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border-radius: 999px; padding: 10px 18px; font: 700 14.5px var(--f-body); text-decoration: none; background: var(--ink); color: var(--paper); border: 0; cursor: pointer; white-space: nowrap; }
+.btn.rec { background: var(--rec); color: var(--rec-ink); }
+.btn.ghost { background: none; color: var(--ink); border: 1px solid var(--line); }
+.btn.sm { padding: 6px 12px; font-size: 13px; }
+.btn.danger { background: none; color: var(--rec); border: 1px solid var(--line); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.lang { border: 1px solid var(--line); background: none; color: var(--ink); border-radius: 999px; padding: 7px 11px; font: 500 13px var(--f-mono); cursor: pointer; }
+
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin-bottom: 22px; overflow-x: auto; }
+.tabs button { background: none; border: 0; border-bottom: 2px solid transparent; padding: 12px 14px; font: 700 15px var(--f-body); color: var(--muted); cursor: pointer; white-space: nowrap; }
+.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--rec); }
+.tabs .cnt { font: 500 12px var(--f-mono); color: var(--muted); margin-left: 4px; }
+
+.panel { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 20px; }
+.form { display: grid; gap: 14px; }
+.row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+label.f, div.f { display: grid; gap: 5px; font-size: 13.5px; font-weight: 700; }
+label.f small, div.f small { font-weight: 500; color: var(--muted); }
+input[type=text], input[type=number], textarea, select { width: 100%; border: 1px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 10px; padding: 10px 12px; font: 15px var(--f-body); }
+textarea { resize: vertical; min-height: 84px; }
+input[type=range] { width: 100%; accent-color: var(--rec); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 3px; background: var(--paper); }
+.seg button { border: 0; background: none; padding: 7px 14px; border-radius: 999px; font: 700 14px var(--f-body); color: var(--muted); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-top: 4px; }
+.price { font: 500 14px var(--f-mono); }
+.price b { color: var(--rec); font-size: 16px; }
+.hint { font-size: 13.5px; color: var(--muted); }
+.ideas { display: flex; gap: 6px; flex-wrap: wrap; }
+.ideas button { border: 1px dashed var(--line); background: none; color: var(--muted); border-radius: 999px; padding: 4px 10px; font-size: 12.5px; cursor: pointer; }
+
+/* characters */
+.chars { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
+.ch { background: var(--card); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; display: grid; grid-template-rows: auto 1fr; }
+.ch .pic { aspect-ratio: 3 / 4; background: var(--soft); position: relative; }
+.ch .pic img { width: 100%; height: 100%; object-fit: cover; }
+.ch .body { padding: 12px 14px 14px; display: grid; gap: 8px; align-content: start; }
+.ch .meta { font: 500 12px var(--f-mono); color: var(--muted); }
+.ch .refs { display: flex; gap: 6px; }
+.ch .refs img { width: 44px; height: 58px; object-fit: cover; border-radius: 6px; cursor: zoom-in; }
+.ch .acts { display: flex; gap: 6px; flex-wrap: wrap; }
+.newch { border: 2px dashed var(--line); border-radius: 18px; display: grid; place-items: center; min-height: 260px; background: none; color: var(--muted); font: 700 16px var(--f-body); cursor: pointer; }
+.newch span { display: grid; gap: 6px; justify-items: center; }
+.newch b { font-size: 34px; line-height: 1; color: var(--rec); }
+.wait { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 16px; font-size: 14px; color: var(--muted); }
+.spin { width: 26px; height: 26px; border: 3px solid var(--line); border-top-color: var(--rec); border-radius: 50%; animation: sp 1s linear infinite; margin: 0 auto 8px; }
+@keyframes sp { to { transform: rotate(360deg); } }
+.picker { grid-column: 1 / -1; }
+.cands { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 14px 0; }
+.cands button { border: 2px solid transparent; padding: 0; border-radius: 12px; overflow: hidden; cursor: pointer; background: var(--soft); aspect-ratio: 3 / 4; }
+.cands button[aria-pressed="true"] { border-color: var(--rec); }
+.cands img { width: 100%; height: 100%; object-fit: cover; }
+@media (max-width: 640px) { .cands { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.voicebox { border-top: 1px solid var(--line); padding-top: 10px; display: grid; gap: 8px; }
+audio { width: 100%; height: 34px; }
+
+/* composer */
+.who { display: flex; gap: 8px; flex-wrap: wrap; }
+.who button { display: flex; gap: 8px; align-items: center; border: 2px solid var(--line); background: var(--paper); border-radius: 12px; padding: 5px 10px 5px 5px; cursor: pointer; color: var(--ink); font: 700 14px var(--f-body); }
+.who button img { width: 34px; height: 44px; border-radius: 7px; object-fit: cover; }
+.who button[aria-pressed="true"] { border-color: var(--rec); }
+.lines { display: grid; gap: 8px; }
+.line { display: grid; grid-template-columns: 150px minmax(0, 1fr) auto; gap: 8px; align-items: start; }
+@media (max-width: 640px) { .line { grid-template-columns: 1fr; } }
+.empty { text-align: center; padding: 40px 20px; color: var(--muted); }
+
+/* videos */
+.vids { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+.vd { background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; display: grid; grid-template-rows: auto 1fr; position: relative; }
+.vd .media { background: #000; aspect-ratio: 9 / 16; position: relative; }
+.vd.w .media { aspect-ratio: 16 / 9; }
+.vd.s .media { aspect-ratio: 1; }
+.vd video, .vd .media img { width: 100%; height: 100%; object-fit: contain; }
+.vd .media .wait { color: #ddd; background: rgba(0,0,0,.45); }
+.vd .body { padding: 10px 12px 12px; display: grid; gap: 6px; align-content: start; }
+.vd .tag { font: 500 11.5px var(--f-mono); color: var(--muted); }
+.vd .txt { font-size: 14px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.vd .acts { display: flex; gap: 6px; flex-wrap: wrap; }
+.vd .sel { position: absolute; top: 8px; left: 8px; z-index: 2; background: rgba(0,0,0,.6); color: #fff; border-radius: 8px; padding: 4px 8px; font-size: 13px; display: flex; gap: 6px; align-items: center; }
+.vd.picked { outline: 3px solid var(--rec); }
+.fail { color: var(--rec); font-size: 13.5px; }
+
+.mergebar { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); background: var(--ink); color: var(--paper); border-radius: 999px; padding: 8px 8px 8px 18px; display: flex; gap: 12px; align-items: center; box-shadow: 0 14px 40px -12px rgba(0,0,0,.5); z-index: 20; max-width: calc(100% - 24px); }
+
+/* gate + modal + toast */
+.gate { max-width: 560px; margin: 40px auto; display: grid; gap: 18px; }
+.codebox { display: flex; gap: 8px; }
+.codebox input { font: 500 16px var(--f-mono); text-transform: uppercase; }
+.packs { display: grid; gap: 10px; }
+.pk { display: flex; justify-content: space-between; align-items: center; gap: 12px; border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; background: var(--card); }
+.pk.pop { border-color: var(--rec); }
+.pk b { font: 700 16px var(--f-display); }
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: grid; place-items: center; padding: 16px; z-index: 50; }
+.modal .panel { width: min(520px, 100%); max-height: 90vh; overflow: auto; display: grid; gap: 14px; }
+.modal img.big { max-height: 80vh; border-radius: 12px; margin: auto; }
+.toast { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--paper); padding: 10px 16px; border-radius: 12px; z-index: 60; font-size: 14.5px; max-width: calc(100% - 24px); }
+.toast.bad { background: var(--rec); color: var(--rec-ink); }
+.keynote { background: var(--soft); border-radius: 14px; padding: 14px 16px; display: grid; gap: 6px; margin-bottom: 18px; }
+.keynote code { font: 700 20px var(--f-mono); letter-spacing: .04em; }
+@media (prefers-reduced-motion: reduce) { .spin { animation-duration: 3s; } }
+@media (max-width: 640px) { .chars { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .newch { min-height: 0; grid-column: 1 / -1; padding: 14px; } .newch span { display: flex; align-items: center; gap: 10px; } .newch b { font-size: 26px; } .ch .refs img { width: 34px; height: 45px; } .bal, .lang { padding: 6px 10px; } #codeBtn { display: none; } .vids { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } }
+.presets-h { display: grid; gap: 2px; margin-top: 4px; }
+.presets { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(175px, 1fr); gap: 10px; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x proximity; }
+.preset { scroll-snap-align: start; text-align: left; display: grid; gap: 4px; align-content: start; border: 2px solid var(--line); background: var(--paper); border-radius: 14px; padding: 12px; cursor: pointer; color: var(--ink); font: inherit; min-height: 150px; }
+.preset:hover { border-color: var(--muted); }
+.preset[aria-pressed="true"] { border-color: var(--rec); background: var(--card); }
+.preset .pi { font-size: 26px; line-height: 1.1; }
+.preset b { font-size: 15px; }
+.preset .pt { font: 500 11px var(--f-mono); color: var(--rec); text-transform: uppercase; letter-spacing: .03em; }
+.preset i { font-size: 13px; color: var(--muted); line-height: 1.35; }
+.preset.rnd { border-style: dashed; }
+.ch .catch { font-style: italic; font-size: 14px; line-height: 1.35; }
+.ch .quirk { font-size: 12.5px; color: var(--muted); line-height: 1.35; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="bar">
+    <span class="logo"><i></i><span>Kadro</span><span class="mono muted" style="font-weight:400">локально</span></span>
+    <div class="right">
+      <span class="bal" id="spent" title="Примерный расход на fal.ai в этом браузере">fal.ai ≈ <b id="spentN">$0</b></span>
+      <button class="btn ghost sm" id="setBtn">Настройки</button>
+    </div>
+  </header>
+
+  <!-- ключ -->
+  <section class="gate" id="gate" hidden>
+    <div>
+      <h2>Ключ fal.ai</h2>
+      <p class="muted">Файл работает прямо с компьютера, без сервера. Запросы идут из браузера в fal.ai с вашим ключом. Ключ хранится только в этом браузере, в файл он не записывается.</p>
+    </div>
+    <div class="panel form">
+      <label class="f"><span>FAL_KEY</span><small>fal.ai → Dashboard → API Keys → Create key</small>
+        <div class="codebox"><input type="text" id="keyIn" placeholder="xxxxxxxx-xxxx-…:xxxxxxxx" autocomplete="off" style="text-transform:none"><button class="btn" id="keyGo">Сохранить</button></div>
+      </label>
+      <div class="fail" id="keyErr" hidden></div>
+    </div>
+  </section>
+
+  <main id="studio" hidden>
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-tab="chars" aria-selected="true">Персонажи<span class="cnt" id="cntChars"></span></button>
+      <button role="tab" data-tab="new" aria-selected="false">Новое видео</button>
+      <button role="tab" data-tab="videos" aria-selected="false">Мои видео<span class="cnt" id="cntVideos"></span></button>
+    </nav>
+
+    <!-- персонажи -->
+    <section data-pane="chars">
+      <div class="panel form" id="wizard" hidden style="margin-bottom:16px">
+        <div class="foot" style="padding:0"><h2>Новый персонаж</h2><button class="btn ghost sm" id="wClose">Отмена</button></div>
+        <p class="hint" style="margin:0">Только вымышленные взрослые люди. Не сравнивайте внешность с реальными людьми.</p>
+        <div class="presets-h"><b>Смешные персонажи с изюминкой</b><span class="hint">Выберите готового — всё заполнится само. Поменять можно что угодно.</span></div>
+        <div class="presets" id="presets"></div>
+        <div class="row">
+          <label class="f"><span>Имя</span><input type="text" id="wName" maxlength="40"></label>
+          <div class="f"><span>Пол</span><div class="seg" id="wGender"><button type="button" data-v="female" aria-pressed="true">Женщина</button><button type="button" data-v="male" aria-pressed="false">Мужчина</button></div></div>
+          <label class="f"><span>Возраст (18–80)</span><input type="number" id="wAge" min="18" max="80" value="28"></label>
+        </div>
+        <label class="f"><span>Внешность</span><small>Волосы, глаза, черты лица, телосложение, особые приметы.</small><textarea id="wLook" maxlength="500" placeholder="Светлые волосы до плеч, серо-зелёные глаза, лёгкие веснушки, открытая улыбка, стройная."></textarea></label>
+        <div class="ideas" id="wIdeas"></div>
+        <label class="f"><span>Одежда</span><input type="text" id="wOutfit" maxlength="300" placeholder="Бежевый оверсайз-свитер"></label>
+        <div class="row" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
+          <label class="f"><span>Изюминка ✨</span><small>Деталь, по которой его узнают в каждом видео: аксессуар, предмет в руках, привычка.</small><input type="text" id="wQuirk" maxlength="200" placeholder="Например: на плече живой попугай"></label>
+          <label class="f"><span>Коронная фраза</span><small>Он скажет её в образце голоса, её легко вставлять в ролики.</small><input type="text" id="wCatch" maxlength="120" placeholder="Например: Спокойно, я профессионал."></label>
+        </div>
+        <div class="row">
+          <label class="f"><span>Голос</span><select id="wVoice"></select></label>
+          <label class="f"><span>Скорость <span class="mono" id="wSpeedV">1.00</span></span><input type="range" id="wSpeed" min="0.7" max="1.4" step="0.05" value="1"></label>
+          <label class="f"><span>Тон <span class="mono" id="wPitchV">0</span></span><input type="range" id="wPitch" min="-6" max="6" step="1" value="0"></label>
+          <label class="f"><span>Язык образца голоса</span><select id="wLang"></select></label>
+        </div>
+        <div class="foot"><span class="price">fal.ai ≈ <b>$1.05</b></span><button class="btn rec" id="wGo">Создать 4 варианта</button></div>
+      </div>
+      <div class="chars" id="charList"></div>
+    </section>
+
+    <!-- новое видео -->
+    <section data-pane="new" hidden>
+      <div class="panel form" id="composer">
+        <div class="seg" id="mode"><button type="button" data-v="talk" aria-pressed="true">Говорит в кадр</button><button type="button" data-v="scene" aria-pressed="false">Сцена</button></div>
+        <p class="hint" style="margin:0" id="modeHint"></p>
+        <div class="f"><span id="whoLabel"></span><div class="who" id="who"></div></div>
+        <div id="talkBox" class="form">
+          <label class="f"><span>Что он скажет</span><small id="tCount"></small><textarea id="tText" maxlength="800"></textarea></label>
+          <div class="ideas" id="tIdeas"></div>
+          <label class="f"><span>Где он (необязательно)</span><small>Например: в уютном кафе у окна, вечерний свет.</small><input type="text" id="tScene" maxlength="400"></label>
+          <div class="row">
+            <label class="f"><span>Язык речи</span><select id="tLang"></select></label>
+            <label class="f"><span>Настроение</span><select id="tEmo"></select></label>
+            <label class="f"><span>Формат</span><select id="tAspect"></select></label>
+            <label class="f"><span>Модель</span><select id="tModel"></select></label>
+          </div>
+        </div>
+        <div id="sceneBox" class="form" hidden>
+          <label class="f"><span>Что происходит</span><small>Место, действие, движение камеры. Например: идут по ночной улице под дождём, камера едет перед ними.</small><textarea id="sScene" maxlength="600"></textarea></label>
+          <div style="display:grid;gap:6px"><b style="font-size:13.5px">Реплики (необязательно, до 4)</b><div class="lines" id="sLines"></div><div><button type="button" class="btn ghost sm" id="sAdd">+ Реплика</button></div></div>
+          <div class="row">
+            <label class="f"><span>Язык речи</span><select id="sLang"></select></label>
+            <label class="f"><span>Модель</span><select id="sModel"></select></label>
+            <label class="f"><span>Длительность</span><select id="sDur"></select></label>
+            <label class="f"><span>Формат</span><select id="sAspect"></select></label>
+          </div>
+        </div>
+        <label class="f"><span>Продолжить с видео</span><small>Новое видео начнётся с последнего кадра выбранного — так получается серия.</small><select id="from"></select></label>
+        <div class="foot"><span class="price">fal.ai ≈ <b id="vPrice"></b> <span class="hint" id="vPriceNote"></span></span><button class="btn rec" id="vGo">Снять видео</button></div>
+      </div>
+      <div class="empty" id="noChars" hidden><p>Сначала создайте персонажа — затем он сможет сниматься в видео.</p><button class="btn rec" id="noCharsGo">Новый персонаж</button></div>
+    </section>
+
+    <section data-pane="videos" hidden>
+      <div class="vids" id="vidList"></div>
+    </section>
+  </main>
+</div>
+
+<div class="mergebar" id="mergeBar" hidden><span id="mergeTxt"></span><button class="btn rec sm" id="mergeGo">Склеить</button><button class="btn sm ghost" style="color:inherit;border-color:#555" id="mergeX">Отмена</button></div>
+
+<div class="modal" id="setModal" hidden><div class="panel">
+  <div class="foot" style="padding:0"><h2>Настройки</h2><button class="btn ghost sm" data-close>Закрыть</button></div>
+  <label class="f"><span>Ключ fal.ai</span><div class="codebox"><input type="text" id="keyEdit" style="text-transform:none;font-size:13px"><button class="btn sm" id="keySave">Сохранить</button></div></label>
+  <div class="hint">Персонажи и видео хранятся в этом браузере, а сами файлы — на серверах fal.ai. Важные видео скачивайте. Чтобы перенести всё в другой браузер, сделайте резервную копию.</div>
+  <div class="foot"><button class="btn ghost sm" id="exportBtn">Скачать резервную копию</button><label class="btn ghost sm" style="cursor:pointer">Загрузить копию<input type="file" id="importIn" accept=".json" hidden></label></div>
+  <div class="foot"><span class="hint" id="spentInfo"></span><button class="btn danger sm" id="resetSpent">Обнулить счётчик</button></div>
+  <div class="fail" id="setMsg" hidden></div>
+</div></div>
+<div class="modal" id="imgModal" hidden><img class="big" id="imgBig" alt=""></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+  // ================= справочник =================
+  const VOICES = [
+    ["Wise_Woman", "female", "Взрослая, мудрая"], ["Calm_Woman", "female", "Спокойная"], ["Lively_Girl", "female", "Живая, молодая"], ["Inspirational_girl", "female", "Вдохновляющая"],
+    ["Sweet_Girl_2", "female", "Нежная"], ["Exuberant_Girl", "female", "Энергичная"], ["Abbess", "female", "Низкая, строгая"],
+    ["Deep_Voice_Man", "male", "Глубокий"], ["Casual_Guy", "male", "Простой, разговорный"], ["Patient_Man", "male", "Спокойный"], ["Determined_Man", "male", "Уверенный"],
+    ["Elegant_Man", "male", "Элегантный"], ["Young_Knight", "male", "Молодой"], ["Imposing_Manner", "male", "Властный"],
+  ].map(([id, g, name]) => ({ id, g, name }));
+  const defaultVoice = (g) => (g === "male" ? "Deep_Voice_Man" : "Wise_Woman");
+  const LANGS = [["ru", "Русский", "Russian", "Russian"], ["en", "English", "English", "English"], ["uk", "Українська", "Ukrainian", "auto"], ["es", "Español", "Spanish", "Spanish"], ["de", "Deutsch", "German", "German"], ["fr", "Français", "French", "French"], ["it", "Italiano", "Italian", "Italian"], ["pt", "Português", "Portuguese", "Portuguese"], ["tr", "Türkçe", "Turkish", "auto"]].map(([id, name, en, boost]) => ({ id, name, en, boost }));
+  const langById = (id) => LANGS.find(l => l.id === id) || LANGS[0];
+  const EMOTIONS = { neutral: "Спокойно", happy: "Радостно", sad: "Грустно", angry: "Раздражённо", surprised: "Удивлённо", fearful: "Тревожно" };
+  const EMO_EN = { neutral: "Calm and friendly", happy: "Cheerful, smiling", sad: "Sad, thoughtful", angry: "Irritated, intense", surprised: "Surprised, animated", fearful: "Worried, nervous" };
+  const ASPECTS = ["9:16", "16:9", "1:1"];
+  const IMAGE_MODEL = "fal-ai/nano-banana-pro", EDIT_MODEL = "fal-ai/nano-banana-pro/edit", TTS_MODEL = "fal-ai/minimax/speech-2.6-hd";
+  const COST = { image: 0.15, tts: 0.01 };
+  const TALK_MODELS = [
+    { id: "avatar_pro", endpoint: "fal-ai/kling-video/ai-avatar/v2/pro", perSec: 0.115, name: "Kling Avatar Pro — лучшее качество" },
+    { id: "avatar_std", endpoint: "fal-ai/kling-video/ai-avatar/v2/standard", perSec: 0.06, name: "Kling Avatar Standard — дешевле" },
+  ];
+  const SCENE_MODELS = [
+    { id: "seedance2", endpoint: "bytedance/seedance-2.0/reference-to-video", perSec: 0.3034, durations: [4, 5, 6, 8, 10, 12, 15], aspects: ["9:16", "16:9", "1:1"], maxImages: 9, audioRef: true, name: "Seedance 2.0 — держит лицо и голос" },
+    { id: "veo31", endpoint: "fal-ai/veo3.1/reference-to-video", perSec: 0.4, durations: [8], aspects: ["9:16", "16:9"], maxImages: 3, audioRef: false, name: "Veo 3.1 — кинематографично, 8 сек" },
+  ];
+  const IDEAS = ["Тёмные кудрявые волосы, карие глаза, густые брови, короткая борода, спортивное телосложение", "Короткая стрижка-пикси, рыжие волосы, зелёные глаза, веснушки, тонкие черты лица", "Седые волосы, аккуратная стрижка, голубые глаза, морщинки у глаз, добрая улыбка", "Длинные прямые чёрные волосы, тёмные глаза, высокие скулы, лёгкий макияж"];
+  const REAL = /(похож(ий|ая|ее|е)?\s+на|похожа\s+на|двойник|копи[яю]\s|как\s+у\s+(актёр|актер|певц|певиц|блогер|президент)|look\s*-?\s*alike|looks?\s+like|resembl|celebrit|famous|знаменит|президент|president|политик|politician)/i;
+  // ---------- подборка смешных персонажей с изюминкой ----------
+  const PRESETS = [
+    { id: "plumber", icon: "🔧", tag: "Сантехник-философ", name: "Геннадий", gender: "male", age: 52, voice: "Deep_Voice_Man", speed: 0.95, pitch: -1,
+      look: "Крепкий мужчина с густыми усами-подковой, добрые хитрые глаза, румяные щёки, небольшой животик",
+      outfit: "Синий рабочий комбинезон поверх тельняшки",
+      quirk: "в руке всегда огромный разводной ключ, за ухом карандаш, на лбу очки для чтения",
+      catch: "Тут, дружище, дело не в трубах. Тут дело в жизни.",
+      ideas: ["Почему кран капает? Потому что ты его не слушаешь. Вот смотри: каждая капля — это маленькое «потом». Потом починю, потом позвоню маме. Тут, дружище, дело не в трубах. Тут дело в жизни.", "Три вещи, которые мужчина должен уметь: поменять прокладку в кране, признать, что был неправ, и не трогать то, что работает.", "Мне сегодня клиент говорит: «Геннадий, а вы диплом философа где получали?» Я говорю: в подвале на Ленина, двадцать лет стажа."] },
+    { id: "gamergran", icon: "🎮", tag: "Бабушка-геймер", name: "Зинаида", gender: "female", age: 74, voice: "Wise_Woman", speed: 1.05, pitch: 0,
+      look: "Бодрая пожилая женщина с седыми волосами в аккуратном пучке, озорные глаза, круглые очки, морщинки от смеха",
+      outfit: "Вязаная кофта с узором и цветастый платок на плечах",
+      quirk: "поверх пучка огромные игровые наушники с разноцветной подсветкой, рядом кружка чая с вареньем",
+      catch: "Внучек, это не баг. Это фича.",
+      ideas: ["Внучек мне говорит: бабушка, ты опять всю ночь играла? А я говорю: не всю, а до рассвета. Это разные вещи.", "Совет от бабушки: если в игре не получается пройти уровень — поешь пирожков и попробуй ещё раз. Работает и в жизни.", "Меня спрашивают, сколько мне лет. Отвечаю: семьдесят четыре уровня опыта. И ни одного сохранения."] },
+    { id: "startup", icon: "🚀", tag: "Вечный стартапер", name: "Стас", gender: "male", age: 31, voice: "Casual_Guy", speed: 1.15, pitch: 1,
+      look: "Худощавый мужчина с идеальной укладкой, белоснежная широкая улыбка, горящие глаза, лёгкая щетина",
+      outfit: "Стёганый жилет поверх белой футболки",
+      quirk: "держит сразу три телефона веером, на шее бейдж с конференции, в другой руке стаканчик кофе",
+      catch: "Это как такси, только для котов!",
+      ideas: ["Слушай, у меня идея на миллион. Это как такси, только для котов! Кот вызывает машину, едет к другому коту. Инвесторы, пишите в директ.", "За неделю я запустил три стартапа, закрыл два и один продал маме. Она пока не знает, что купила.", "Главное в бизнесе — питч. Смотри: «Мы меняем мир». Чем? Неважно. Главное — как я это говорю."] },
+    { id: "drama", icon: "💅", tag: "Королева драмы", name: "Марго", gender: "female", age: 38, voice: "Inspirational_girl", speed: 1.0, pitch: 1,
+      look: "Эффектная женщина с пышной ярко-рыжей укладкой, длинные ресницы, выразительные брови, яркая помада",
+      outfit: "Шёлковый халат с перьями",
+      quirk: "огромные солнцезащитные очки в пол-лица и розовое боа из перьев, даже дома",
+      catch: "Я не драматизирую. Я так живу.",
+      ideas: ["Сегодня в магазине закончилось моё любимое молоко. Я стояла у полки три минуты. Молча. Как в кино. Я не драматизирую. Я так живу.", "Мне написали «ок». Не «окей», не «хорошо», а «ок». Девочки, это конец отношений?", "Утро начинается не с кофе. Утро начинается с того, что я выбираю, кого сегодня простить."] },
+    { id: "dacha", icon: "🥒", tag: "Строгий дачник", name: "Пётр Ильич", gender: "male", age: 66, voice: "Patient_Man", speed: 0.9, pitch: -2,
+      look: "Загорелый пожилой мужчина с густыми седыми бровями, строгий прищур, обветренное лицо, крепкие руки",
+      outfit: "Клетчатая рубашка с закатанными рукавами и старая жилетка",
+      quirk: "соломенная шляпа и огромный кабачок в руках, который он держит как трофей",
+      catch: "Кабачок — это не овощ. Это характер.",
+      ideas: ["Соседи спрашивают, почему у меня кабачки больше, чем у них. Потому что я с ними разговариваю. Строго, но справедливо.", "Молодёжь едет на море. А настоящий отдых — это прополка в шесть утра. Кабачок — это не овощ. Это характер.", "Внимание, урожай года! Сорок два кабачка. Варенье из кабачков будет у всех. Отказы не принимаются."] },
+    { id: "catguy", icon: "😺", tag: "Кот в теле человека", name: "Лёша", gender: "male", age: 27, voice: "Young_Knight", speed: 0.88, pitch: 0,
+      look: "Молодой мужчина с растрёпанными волосами, сонные полуприкрытые глаза, довольная ленивая улыбка",
+      outfit: "Мягкая пижама-комбинезон серого цвета",
+      quirk: "на голове капюшон с кошачьими ушками, в руках огромная кружка какао с маршмеллоу",
+      catch: "Сначала поспим. Потом посмотрим.",
+      ideas: ["Мой план на день: поспать, поесть, полежать на солнышке и снова поспать. Сначала поспим. Потом посмотрим.", "Если на столе что-то лежит — это надо уронить. Я не знаю почему. Просто надо.", "Начальник спрашивает, где отчёт. А я смотрю на него и медленно моргаю. Это значит «люблю». Должно сработать."] },
+    { id: "teacher", icon: "📏", tag: "Завуч на пенсии", name: "Инна Сергеевна", gender: "female", age: 61, voice: "Abbess", speed: 0.95, pitch: -1,
+      look: "Строгая женщина с высоким пучком, очки на цепочке, поджатые губы, но смешинки в глазах",
+      outfit: "Тёмно-синий костюм с брошью",
+      quirk: "в руке деревянная указка, в нагрудном кармане красная ручка, которой она всё исправляет",
+      catch: "Повтори. Но уже без ошибок.",
+      ideas: ["Мне в сообщении написали «щас». Не «сейчас», а «щас». Два. Повтори. Но уже без ошибок.", "Тридцать лет в школе научили меня главному: по шагам в коридоре я знаю, кто не сделал домашку.", "Сегодня в магазине я поставила оценку кассиру. Четыре с минусом. За вежливость плюс, за сдачу минус."] },
+    { id: "nerdbuff", icon: "💪", tag: "Качок-ботаник", name: "Арнольд", gender: "male", age: 35, voice: "Determined_Man", speed: 1.0, pitch: -1,
+      look: "Огромный мускулистый мужчина с квадратной челюстью, короткий ёжик, добрые застенчивые глаза",
+      outfit: "Вязаный жилет поверх рубашки, которая трещит на бицепсах",
+      quirk: "маленькие круглые очки и толстая книга по высшей математике в руке",
+      catch: "Мышцы — это белок. А интеграл — это любовь.",
+      ideas: ["Люди думают, что я хожу в зал ради мышц. Нет. Я хожу, чтобы носить больше книг за раз.", "Сегодня жим лёжа: сто двадцать килограммов. А потом решил три задачи по топологии. Хороший день.", "Мышцы — это белок. А интеграл — это любовь. Подписывайтесь, расскажу, как это связано."] },
+    { id: "influ", icon: "🤳", tag: "Блогер-неудачница", name: "Вика", gender: "female", age: 24, voice: "Lively_Girl", speed: 1.15, pitch: 1,
+      look: "Молодая девушка с идеальным макияжем, длинные светлые волосы, с одной стороны слегка растрёпаны, широкая неловкая улыбка",
+      outfit: "Розовый оверсайз-худи",
+      quirk: "рядом всегда кольцевая лампа, а на щеке забытая наклейка-патч под глаз",
+      catch: "Это не провал. Это контент!",
+      ideas: ["Всем привет, сегодня покажу идеальное утро! Так, кофе пролился, кот сел на тональник, лампа упала. Это не провал. Это контент!", "Мой охват вчера: три человека. Мама, бабушка и я со второго аккаунта. Растём!", "Распаковка! Мне прислали… а, нет, это я себе сама заказала. Всё равно распаковка!"] },
+    { id: "taxi", icon: "🚕", tag: "Таксист-эксперт", name: "Дядя Вова", gender: "male", age: 48, voice: "Casual_Guy", speed: 1.05, pitch: -2,
+      look: "Мужчина с трёхдневной щетиной, хитрый прищур, загорелые руки, залысины",
+      outfit: "Кожаная куртка поверх полосатого свитера",
+      quirk: "деревянная массажная накидка из бусин на плечах и зубочистка в уголке рта",
+      catch: "Я тебе так скажу…",
+      ideas: ["Я тебе так скажу: экономика — это как пробка. Все стоят, а виноват всегда тот, кто впереди.", "Пассажир спрашивает: а вы в политике разбираетесь? Я говорю: я в такси двадцать лет. Я разбираюсь во всём.", "Короче, лайфхак: если навигатор говорит налево — езжай направо. Я тебе так скажу, он не местный."] },
+    { id: "psychic", icon: "🔮", tag: "Гадалка из подъезда", name: "Мадам Жози", gender: "female", age: 57, voice: "Wise_Woman", speed: 0.92, pitch: -2,
+      look: "Женщина с пышными тёмными кудрями, густые подведённые глаза, много колец на пальцах, загадочная улыбка",
+      outfit: "Цветастая шаль с бахромой и множество бус",
+      quirk: "вместо хрустального шара круглый аквариум с золотой рыбкой, в который она многозначительно смотрит",
+      catch: "Вижу… вижу… ты опять не помыл посуду.",
+      ideas: ["Вижу… вижу… ты опять не помыл посуду. И карты тут ни при чём. Это видно по твоему лицу.", "Гороскоп на неделю. Овны: ешьте суп. Тельцы: тоже ешьте суп. Остальные: не спорьте с мамой.", "Рыбка сказала, что в пятницу тебя ждёт большая удача. Правда, она всегда так говорит. Но рыбка ещё ни разу не ошиблась."] },
+    { id: "coach", icon: "📣", tag: "Тренер по позитиву", name: "Роман", gender: "male", age: 40, voice: "Determined_Man", speed: 1.2, pitch: 1,
+      look: "Мужчина с блестящей лысиной, огромная улыбка во все зубы, загорелый, спортивное телосложение",
+      outfit: "Ярко-жёлтый спортивный костюм",
+      quirk: "на шее свисток, на голове махровая повязка, большие пальцы всегда подняты вверх",
+      catch: "Отлично! А теперь — ещё лучше!",
+      ideas: ["Проснулся? Отлично! А теперь — ещё лучше! Встал с кровати! Почистил зубы! Ты чемпион!", "Опоздал на работу? Отлично! Значит, ты хорошо выспался! Видишь, во всём есть плюс!", "Упражнение дня: улыбнись. Шире. Ещё шире. Соседи смотрят странно? Отлично! Значит, ты на верном пути!"] },
+  ];
+  // для «Случайного» персонажа
+  const RND = {
+    female: { names: ["Тамара", "Люся", "Снежана", "Ольга", "Кира", "Фаина"], looks: ["Пышные кудрявые волосы, веснушки, курносый нос, широкая улыбка", "Короткая стрижка с чёлкой, большие удивлённые глаза, ямочки на щеках", "Высокая причёска, яркие брови, пухлые губы, хитрый взгляд"] },
+    male: { names: ["Эдуард", "Боря", "Аркадий", "Жора", "Валера", "Феликс"], looks: ["Пышные бакенбарды, лохматые брови, нос картошкой, весёлые глаза", "Аккуратная бородка клинышком, зачёсанные назад волосы, серьёзное лицо", "Рыжая борода лопатой, густые волосы, широкая добродушная улыбка"] },
+    ages: [24, 29, 33, 41, 47, 55, 63, 70],
+    outfits: ["Яркая гавайская рубашка", "Строгий костюм-тройка", "Спортивный костюм с лампасами", "Свитер с оленями", "Халат и тапочки-зайцы", "Комбинезон в горошек"],
+    quirks: ["на голове шапочка из фольги", "на плече живой попугай", "в руке половник, как скипетр", "очки в форме сердечек", "на шее гирлянда из сушек", "бигуди в волосах в любой ситуации", "в зубах колосок, как у ковбоя", "огромный бант на голове", "в руках резиновая уточка", "монокль и пышные накрученные усы"],
+    catches: ["Ну что, поехали!", "Я так и знал(а)!", "Спокойно, я профессионал.", "Это была шутка. Или нет.", "Без паники, у меня есть план.", "А можно мне просто тортик?", "Жизнь — боль, но с юмором.", "Не учите меня жить, лучше помогите материально."],
+  };
+  const VOICE_IDS = { female: ["Wise_Woman", "Calm_Woman", "Lively_Girl", "Inspirational_girl", "Sweet_Girl_2", "Exuberant_Girl", "Abbess"], male: ["Deep_Voice_Man", "Casual_Guy", "Patient_Man", "Determined_Man", "Elegant_Man", "Young_Knight", "Imposing_Manner"] };
+  const GENERIC_IDEAS = ["Три вещи, которые я никогда не делаю по утрам. Первая — не спорю с будильником. Вторая — не смотрю в зеркало до кофе. Третья — секрет.", "Вы спрашивали, как у меня дела. Отвечаю честно: лучше всех, просто никто не завидует.", "Сейчас расскажу секрет, который никому не рассказывал. Только никому, договорились?"];
+  const pickR = (a) => a[Math.floor(Math.random() * a.length)];
+  function randomPreset() {
+    const g = Math.random() < 0.5 ? "female" : "male";
+    return { id: "", icon: "🎲", name: pickR(RND[g].names), gender: g, age: pickR(RND.ages), look: pickR(RND[g].looks), outfit: pickR(RND.outfits), quirk: pickR(RND.quirks), catch: pickR(RND.catches), voice: pickR(VOICE_IDS[g]), speed: 1, pitch: 0 };
+  }
+
+  const estSeconds = (text) => Math.max(3, Math.min(60, Math.ceil(String(text || "").length / 14)));
+
+  // ================= хранение =================
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); return true; } catch { return false; } } };
+  let KEY = store.get("kd-local-key") || "";
+  let S = (() => { try { return JSON.parse(store.get("kd-local-state")) || null; } catch { return null; } })() || { chars: [], videos: [], spent: 0 };
+  S.chars ||= []; S.videos ||= []; S.spent ||= 0;
+  let memOnly = false;
+  function save() { if (!store.set("kd-local-state", JSON.stringify(S)) && !memOnly) { memOnly = true; toast("Браузер не даёт сохранять данные. Всё пропадёт после закрытия — скачайте резервную копию в настройках.", true); } }
+  const newId = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+  const clean = (v, max) => String(v ?? "").replace(/\s+/g, " ").trim().slice(0, max);
+  const gw = (g) => (g === "male" ? "man" : "woman");
+  const spend = (usd) => { S.spent = +(S.spent + usd).toFixed(3); };
+
+  // ================= fal.ai =================
+  class FalError extends Error {}
+  function falMsg(status, data) {
+    let d = data?.detail ?? data?.error ?? data?.message ?? "";
+    if (Array.isArray(d)) d = d.map(x => x.msg || JSON.stringify(x)).join("; ");
+    else if (typeof d === "object") d = JSON.stringify(d);
+    d = String(d);
+    if (status === 401 || status === 403) return "fal.ai не принял ключ. Проверьте его в настройках.";
+    if (status === 402 || /balance|locked|billing|credit/i.test(d)) return "На аккаунте fal.ai закончился баланс. Пополните его на fal.ai.";
+    if (/nsfw|safety|content policy|flagged/i.test(d)) return "Запрос не прошёл проверку безопасности. Измените описание или текст.";
+    return `fal.ai: ${status ? "(" + status + ") " : ""}${d.slice(0, 220) || "неизвестная ошибка"}`;
+  }
+  async function falFetch(url, opts = {}) {
+    let res;
+    try { res = await fetch(url, { ...opts, headers: { authorization: "Key " + KEY, "content-type": "application/json" } }); }
+    catch { throw new FalError("Нет связи с fal.ai. Проверьте интернет."); }
+    const text = await res.text();
+    let data; try { data = JSON.parse(text); } catch { data = { detail: text }; }
+    return { ok: res.ok, status: res.status, data };
+  }
+  async function submit(endpoint, input, optional = []) {
+    const url = `https://queue.fal.run/${endpoint}`;
+    let r = await falFetch(url, { method: "POST", body: JSON.stringify(input) });
+    if (r.status === 422 && optional.length) { const slim = { ...input }; optional.forEach(k => delete slim[k]); r = await falFetch(url, { method: "POST", body: JSON.stringify(slim) }); }
+    if (r.ok && r.data.request_id) return { endpoint, statusUrl: r.data.status_url, responseUrl: r.data.response_url, started: Date.now() };
+    throw new FalError(falMsg(r.status, r.data));
+  }
+  async function check(job) {
+    const st = await falFetch(job.statusUrl);
+    if (!st.ok) return st.status >= 400 && st.status < 500 ? { state: "failed", error: falMsg(st.status, st.data) } : { state: "working" };
+    if (st.data.status !== "COMPLETED") return Date.now() - job.started > 25 * 60e3 ? { state: "failed", error: "слишком долго" } : { state: "working" };
+    const out = await falFetch(job.responseUrl);
+    if (!out.ok) return { state: "failed", error: falMsg(out.status, out.data) };
+    if (out.data?.error) return { state: "failed", error: String(out.data.error).slice(0, 300) };
+    return { state: "done", data: out.data };
+  }
+  const urlOf = (x) => (typeof x === "string" ? x : x?.url);
+  const imagesOf = (d) => (d?.images || (d?.image ? [d.image] : [])).map(urlOf).filter(Boolean);
+  const videoOf = (d) => urlOf(d?.video);
+  const audioOf = (d) => urlOf(d?.audio);
+
+  // ================= персонажи =================
+  const IDENTITY = "Keep the exact same person: identical face, facial features, skin tone, age, hairstyle, hair colour, body type, the same clothes and the same signature accessories and details.";
+  const portraitPrompt = (c) => [
+    `Photorealistic head-and-shoulders portrait photograph of a fictional ${c.age}-year-old ${gw(c.gender)}.`,
+    c.look ? `Appearance: ${c.look}.` : "", c.outfit ? `Clothing: ${c.outfit}.` : "",
+    c.quirk ? `Signature detail that makes this character instantly recognisable: ${c.quirk}. Make it clearly visible.` : "",
+    c.quirk || c.catch ? "Characterful, warm and slightly comedic expression, like a memorable sitcom character, while staying a natural photorealistic person." : "",
+    "The person is entirely fictional and must not resemble any real or famous person.",
+    "Facing the camera, relaxed natural expression, natural skin texture with visible pores, soft even studio lighting, plain light grey background, sharp focus, 85mm lens.",
+    "No text, no watermark, no logo.",
+  ].filter(Boolean).join(" ");
+  const SHEET = [
+    { key: "full", aspect: "9:16", prompt: `Show this person as a full-body photo standing naturally and facing the camera, arms relaxed, plain light grey studio background, soft even light, photorealistic. ${IDENTITY}` },
+    { key: "three", aspect: "3:4", prompt: `Show this person in a three-quarter view, head and shoulders, turned about 40 degrees to the side, looking slightly off camera, plain light grey studio background, soft even light, photorealistic. ${IDENTITY}` },
+    { key: "profile", aspect: "3:4", prompt: `Show this person in side profile, head and shoulders, plain light grey studio background, soft even light, photorealistic. ${IDENTITY}` },
+  ];
+  const sampleText = (c) => c.catch ? (c.sampleLang === "ru" ? `Привет! Меня зовут ${c.name}. ${c.catch}` : `Hi! I'm ${c.name}. ${c.catch}`)
+    : c.sampleLang === "ru" ? `Привет! Меня зовут ${c.name}. ${c.gender === "male" ? "Рад" : "Рада"} знакомству — давай снимем что-нибудь классное.` : `Hi! I'm ${c.name}. Nice to meet you — let's make something great together.`;
+  async function startTTS(text, voice, lang, gender, emotion = "neutral") {
+    const L = langById(lang);
+    const input = (vid) => ({ prompt: text, output_format: "url", language_boost: L.boost, voice_setting: { voice_id: vid, speed: voice.speed || 1, pitch: voice.pitch || 0, vol: 1, emotion: EMOTIONS[emotion] ? emotion : "neutral" }, audio_setting: { format: "mp3", sample_rate: 32000, bitrate: 128000, channel: 1 } });
+    spend(COST.tts);
+    try { return await submit(TTS_MODEL, input(voice.id), ["audio_setting", "language_boost"]); }
+    catch (e) { if (voice.id === defaultVoice(gender)) throw e; return submit(TTS_MODEL, input(defaultVoice(gender)), ["audio_setting", "language_boost"]); }
+  }
+  const portraitJob = (c) => submit(IMAGE_MODEL, { prompt: portraitPrompt(c), num_images: 4, aspect_ratio: "3:4", resolution: "2K", output_format: "jpeg" }, ["aspect_ratio", "resolution", "output_format"]);
+  const findChar = (id) => S.chars.find(c => c.id === id);
+
+  async function createChar(b) {
+    const c = {
+      id: newId(), created: Date.now(), name: clean(b.name, 40), gender: b.gender === "male" ? "male" : "female",
+      age: Math.max(18, Math.min(80, parseInt(b.age, 10) || 28)), look: clean(b.look, 500), outfit: clean(b.outfit, 300),
+      sampleLang: LANGS.some(l => l.id === b.lang) ? b.lang : "ru",
+      voice: { id: VOICES.find(v => v.id === b.voice)?.id || defaultVoice(b.gender), speed: Math.max(0.7, Math.min(1.4, Number(b.speed) || 1)), pitch: Math.max(-6, Math.min(6, parseInt(b.pitch, 10) || 0)) },
+      quirk: clean(b.quirk, 200), catch: clean(b.catch, 120), preset: PRESETS.some(p => p.id === b.preset) ? b.preset : "",
+      candidates: [], refs: [], status: "portraits",
+    };
+    if (!c.name) throw new Error("Дайте персонажу имя.");
+    if (c.look.length < 10) throw new Error("Опишите внешность хотя бы парой фраз: волосы, глаза, черты лица.");
+    if ([c.name, c.look, c.outfit, c.quirk, c.catch].some(t => REAL.test(t))) throw new Error("Персонажи должны быть вымышленными. Опишите внешность своими словами, без сравнения с реальными людьми.");
+    c.job = await portraitJob(c);
+    spend(4 * COST.image);
+    S.chars.unshift(c); save();
+  }
+  async function reroll(c) {
+    c.job = await portraitJob(c); spend(4 * COST.image);
+    c.candidates = []; c.status = "portraits"; c.error = ""; save();
+  }
+  async function pick(c, index) {
+    const src = c.candidates[index];
+    if (!src) throw new Error("Выберите один из вариантов.");
+    c.portrait = src; c.status = "sheet"; c.refs = []; c.jobs = {};
+    for (const s of SHEET) {
+      try { c.jobs[s.key] = await submit(EDIT_MODEL, { prompt: s.prompt, image_urls: [src], num_images: 1, aspect_ratio: s.aspect, resolution: "2K", output_format: "jpeg" }, ["aspect_ratio", "resolution", "output_format"]); spend(COST.image); }
+      catch (e) { c.jobs[s.key] = { failed: e.message }; }
+    }
+    try { c.jobs.tts = await startTTS(sampleText(c), c.voice, c.sampleLang, c.gender); } catch (e) { c.jobs.tts = { failed: e.message }; }
+    save();
+  }
+  async function setVoice(c, b) {
+    c.voice = { id: VOICES.find(v => v.id === b.voice)?.id || c.voice.id, speed: Math.max(0.7, Math.min(1.4, Number(b.speed) || 1)), pitch: Math.max(-6, Math.min(6, parseInt(b.pitch, 10) || 0)) };
+    if (LANGS.some(l => l.id === b.lang)) c.sampleLang = b.lang;
+    c.voiceJob = await startTTS(sampleText(c), c.voice, c.sampleLang, c.gender); save();
+  }
+  async function stepChars() {
+    for (const c of S.chars) {
+      try {
+        if (c.status === "portraits") {
+          const r = await check(c.job);
+          if (r.state === "failed") { c.status = "failed"; c.error = r.error; delete c.job; continue; }
+          if (r.state !== "done") continue;
+          c.candidates = imagesOf(r.data).slice(0, 4);
+          if (!c.candidates.length) { c.status = "failed"; c.error = "модель не вернула фото"; continue; }
+          c.status = "pick"; delete c.job;
+        } else if (c.status === "sheet") {
+          let pending = false;
+          for (const [k, job] of Object.entries(c.jobs)) {
+            if (!job || job.failed || job.done) continue;
+            const r = await check(job);
+            if (r.state === "working") { pending = true; continue; }
+            if (r.state === "failed") { c.jobs[k] = { failed: r.error }; continue; }
+            if (k === "tts") c.sample = audioOf(r.data) || c.sample;
+            else { const img = imagesOf(r.data)[0]; if (img) c[`ref_${k}`] = img; }
+            c.jobs[k] = { done: true };
+          }
+          if (pending) continue;
+          c.refs = ["full", "three", "profile"].map(k => c[`ref_${k}`]).filter(Boolean);
+          c.status = "ready"; delete c.jobs; c.candidates = [];
+          toast(`${c.name} готов(а) сниматься!`);
+        }
+        if (c.voiceJob) {
+          const r = await check(c.voiceJob);
+          if (r.state === "working") continue;
+          if (r.state === "done" && audioOf(r.data)) c.sample = audioOf(r.data); else toast("Не удалось озвучить новый голос: " + (r.error || ""), true);
+          delete c.voiceJob;
+        }
+      } catch (e) { /* нет связи — попробуем в следующий раз */ }
+    }
+  }
+
+  // ================= видео =================
+  const frameWord = (a) => (a === "9:16" ? "vertical 9:16" : a === "16:9" ? "horizontal 16:9" : "square 1:1");
+  const lastFrame = (url) => submit("fal-ai/ffmpeg-api/extract-frame", { video_url: url, frame_type: "last" });
+  function previous(id) {
+    if (!id) return null;
+    const p = S.videos.find(v => v.id === id);
+    if (!p || p.status !== "done") throw new Error("Предыдущее видео ещё не готово.");
+    return p;
+  }
+  async function createTalk(b) {
+    const c = findChar(b.char);
+    if (!c || c.status !== "ready") throw new Error("Выберите готового персонажа.");
+    const text = clean(b.text, 800);
+    if (text.length < 2) throw new Error("Напишите, что скажет персонаж.");
+    const scene = clean(b.scene, 400);
+    if (REAL.test(scene)) throw new Error("В сцене не должно быть реальных знаменитостей.");
+    const prev = previous(b.from);
+    if (prev && !prev.chars.includes(c.id)) throw new Error(`Продолжить можно только видео, где есть ${c.name}.`);
+    const aspect = prev?.aspect || (ASPECTS.includes(b.aspect) ? b.aspect : "9:16");
+    const model = TALK_MODELS.find(m => m.id === b.model) || TALK_MODELS[0];
+    const v = { id: newId(), mode: "talk", chars: [c.id], charNames: [c.name], text, scene, lang: langById(b.lang).id, aspect, emotion: EMOTIONS[b.emotion] ? b.emotion : "neutral", model: model.id, from: prev?.id || "", status: "working", stage: "prep", jobs: {}, created: Date.now() };
+    if (prev) v.jobs.frame = await lastFrame(prev.result);
+    else {
+      const prompt = [
+        "The person shown in the reference images (all images show the same person from different angles).",
+        "Keep the exact same face, facial features, skin tone, age, hairstyle and body type.",
+        c.quirk ? `Keep the character's signature detail clearly visible: ${c.quirk}.` : "",
+        scene ? `Scene: ${scene}. Keep the same clothes unless the scene describes different clothing.` : "Setting: a clean, softly lit modern room. Keep the same clothes.",
+        `Medium close-up from the chest up, the person faces the camera and looks straight into the lens, mouth closed, natural expression, ready to speak. Flattering natural light, photorealistic, ${frameWord(aspect)} frame. No text, no watermark.`,
+      ].filter(Boolean).join(" ");
+      v.jobs.frame = await submit(EDIT_MODEL, { prompt, image_urls: [c.portrait, ...c.refs.slice(0, 2)], num_images: 1, aspect_ratio: aspect, resolution: "2K", output_format: "jpeg" }, ["resolution", "output_format"]);
+      spend(COST.image);
+    }
+    v.jobs.tts = await startTTS(text, c.voice, v.lang, c.gender, v.emotion);
+    S.videos.unshift(v); save();
+  }
+  function scenePrompt(model, chars, scene, lines, lang, frameIdx, audioIdx) {
+    const L = langById(lang).en;
+    const byId = Object.fromEntries(chars.map(c => [c.id, c]));
+    const dlg = lines.filter(l => l.text && byId[l.char]);
+    if (model.id === "seedance2") {
+      let n = 0;
+      const who = chars.map((c, i) => `- ${c.name}, a ${c.age}-year-old ${gw(c.gender)}: ${c._imgs.map(() => `@Image${++n}`).join(", ")} show this same person.${c.quirk ? ` Signature detail: ${c.quirk}.` : ""}${audioIdx[i] ? ` Voice: @Audio${audioIdx[i]}.` : ""}`);
+      return ["Photorealistic cinematic video with natural motion and real-world physics.", "Characters (keep their faces and identities exactly as in the references):", ...who, `Scene: ${scene}`,
+        dlg.length ? `Dialogue, spoken in ${L} with natural lip-sync and no subtitles:` : "No dialogue; natural ambient sound only.", ...dlg.map(l => `${byId[l.char].name}: "${l.text}"`),
+        frameIdx ? `@Image${frameIdx} is the last frame of the previous shot: continue seamlessly from it, same location, lighting and clothing.` : "", "No text, captions, logos or watermarks on screen."].filter(Boolean).join("\n");
+    }
+    return [`Photorealistic cinematic video. The reference images show ${chars.map(c => `${c.name}, a ${c.age}-year-old ${gw(c.gender)}`).join(" and ")}. Keep their faces exactly as in the references.`,
+      frameIdx ? "One reference image is the last frame of the previous shot: continue seamlessly from it, same location, lighting and clothing." : "", `Scene: ${scene}`,
+      dlg.length ? `Dialogue in ${L}: ${dlg.map(l => `${byId[l.char].name} says: "${l.text}"`).join(" ")}` : "No dialogue; natural ambient sound only.", "No subtitles or text on screen."].filter(Boolean).join("\n");
+  }
+  async function submitScene(v) {
+    const model = SCENE_MODELS.find(m => m.id === v.model);
+    const chars = v.chars.map(findChar).filter(Boolean);
+    if (chars.length !== v.chars.length) throw new Error("персонаж удалён");
+    const perChar = model.id === "seedance2" ? 3 : Math.max(1, Math.floor((model.maxImages - (v.frameUrl ? 1 : 0)) / chars.length));
+    chars.forEach(c => c._imgs = [c.portrait, c.ref_full, c.ref_three].filter(Boolean).slice(0, perChar));
+    const image_urls = chars.flatMap(c => c._imgs);
+    let frameIdx = 0;
+    if (v.frameUrl) { image_urls.push(v.frameUrl); frameIdx = image_urls.length; }
+    const audioIdx = [], audio_urls = [];
+    if (model.audioRef) for (const c of chars) { if (c.sample) { audio_urls.push(c.sample); audioIdx.push(audio_urls.length); } else audioIdx.push(0); }
+    const prompt = scenePrompt(model, chars, v.scene, v.lines, v.lang, frameIdx, audioIdx);
+    chars.forEach(c => delete c._imgs);
+    const input = model.id === "seedance2"
+      ? { prompt, image_urls: image_urls.slice(0, 9), ...(audio_urls.length ? { audio_urls } : {}), duration: String(v.duration), aspect_ratio: v.aspect, resolution: "720p", generate_audio: true }
+      : { prompt, image_urls: image_urls.slice(0, model.maxImages), aspect_ratio: v.aspect, duration: "8s", resolution: "720p", generate_audio: true };
+    v.job = await submit(model.endpoint, input, ["resolution"]);
+    v.stage = "video"; spend(v.duration * model.perSec);
+  }
+  async function createScene(b) {
+    const ids = [...new Set(b.chars)].slice(0, 2);
+    const chars = ids.map(findChar);
+    if (!ids.length || chars.some(c => !c || c.status !== "ready")) throw new Error("Выберите готовых персонажей.");
+    const scene = clean(b.scene, 600);
+    if (scene.length < 10) throw new Error("Опишите, что происходит в сцене.");
+    if (REAL.test(scene)) throw new Error("В сцене не должно быть реальных знаменитостей.");
+    const model = SCENE_MODELS.find(m => m.id === b.model) || SCENE_MODELS[0];
+    const lines = b.lines.map(l => ({ char: ids.includes(l.char) ? l.char : ids[0], text: clean(l.text, 220) })).filter(l => l.text).slice(0, 4);
+    const duration = model.durations.includes(+b.duration) ? +b.duration : model.durations[0];
+    const prev = previous(b.from);
+    const v = { id: newId(), mode: "scene", chars: ids, charNames: chars.map(c => c.name), scene, lines, lang: langById(b.lang).id, aspect: model.aspects.includes(b.aspect) ? b.aspect : model.aspects[0], duration, model: model.id, from: prev?.id || "", status: "working", stage: prev ? "frame" : "video", jobs: {}, created: Date.now() };
+    if (prev) v.jobs.frame = await lastFrame(prev.result); else await submitScene(v);
+    S.videos.unshift(v); save();
+  }
+  async function merge(ids) {
+    const list = ids.map(id => S.videos.find(v => v.id === id)).filter(v => v && v.status === "done");
+    if (list.length < 2) throw new Error("Отметьте хотя бы два готовых видео.");
+    const v = { id: newId(), mode: "merge", chars: [...new Set(list.flatMap(x => x.chars))], charNames: [...new Set(list.flatMap(x => x.charNames))], aspect: list[0].aspect, status: "working", stage: "video", created: Date.now() };
+    v.job = await submit("fal-ai/ffmpeg-api/merge-videos", { video_urls: list.map(x => x.result), resolution_aspect_ratio_video_index: 0 }, ["resolution_aspect_ratio_video_index"]);
+    S.videos.unshift(v); save();
+  }
+  const failVideo = (v, err) => { v.status = "failed"; v.error = String(err || "ошибка").slice(0, 300); delete v.jobs; delete v.job; };
+  async function stepVideos() {
+    for (const v of S.videos) {
+      if (v.status !== "working") continue;
+      try {
+        if (v.mode === "talk" && v.stage === "prep") {
+          for (const k of ["frame", "tts"]) {
+            const job = v.jobs[k];
+            if (!job || job.done) continue;
+            const r = await check(job);
+            if (r.state === "failed") throw new Error(r.error);
+            if (r.state !== "done") continue;
+            if (k === "frame") { v.frameUrl = imagesOf(r.data)[0]; if (!v.frameUrl) throw new Error("не получился кадр"); v.poster = v.frameUrl; }
+            else { v.audioUrl = audioOf(r.data); if (!v.audioUrl) throw new Error("не получилась речь"); v.audioMs = r.data.duration_ms || 0; }
+            v.jobs[k] = { done: true };
+          }
+          if (v.frameUrl && v.audioUrl) {
+            const model = TALK_MODELS.find(m => m.id === v.model) || TALK_MODELS[0];
+            v.job = await submit(model.endpoint, { image_url: v.frameUrl, audio_url: v.audioUrl, prompt: `${EMO_EN[v.emotion] || EMO_EN.neutral}, talking to the camera with natural head movement, blinking and subtle hand gestures.` }, ["prompt"]);
+            v.stage = "video"; spend(Math.ceil((v.audioMs || estSeconds(v.text) * 1000) / 1000) * model.perSec);
+          }
+        } else if (v.stage === "frame") {
+          const r = await check(v.jobs.frame);
+          if (r.state === "failed") throw new Error(r.error);
+          if (r.state !== "done") continue;
+          v.frameUrl = imagesOf(r.data)[0];
+          if (!v.frameUrl) throw new Error("не удалось взять последний кадр");
+          await submitScene(v);
+        } else if (v.stage === "video") {
+          const r = await check(v.job);
+          if (r.state === "failed") throw new Error(r.error);
+          if (r.state !== "done") continue;
+          v.result = videoOf(r.data);
+          if (!v.result) throw new Error("модель не вернула видео");
+          v.seconds = Number(r.data.duration) || (v.audioMs ? v.audioMs / 1000 : v.duration) || 0;
+          v.status = "done"; v.stage = ""; delete v.job; delete v.jobs;
+          toast("Видео готово!");
+        }
+      } catch (e) { if (e instanceof FalError && /связи/.test(e.message)) continue; failVideo(v, e.message); }
+    }
+  }
+
+  // ================= фоновая проверка =================
+  let running = false, timer = null;
+  const busy = () => S.chars.some(c => ["portraits", "sheet"].includes(c.status) || c.voiceJob) || S.videos.some(v => v.status === "working");
+  async function tick() {
+    clearTimeout(timer);
+    if (KEY && busy() && !running) {
+      running = true;
+      try { await stepChars(); await stepVideos(); save(); render(); } finally { running = false; }
+    }
+    timer = setTimeout(tick, busy() ? 4000 : 15000);
+  }
+  window.addEventListener("beforeunload", e => { if (busy()) { e.preventDefault(); e.returnValue = ""; } });
+
+  // ================= интерфейс =================
+  let tab = "chars", mode = "talk", picked = [], lines = [], mergeSel = new Set(), candPick = {}, wGender = "female";
+  function toast(msg, bad) { const el = $("toast"); el.textContent = msg; el.className = "toast" + (bad ? " bad" : ""); el.hidden = false; clearTimeout(el._t); el._t = setTimeout(() => el.hidden = true, bad ? 7000 : 3500); }
+  const opts = (list, val) => list.map(([v, l]) => `<option value="${esc(v)}"${String(v) === String(val) ? " selected" : ""}>${esc(l)}</option>`).join("");
+  const usd = (n) => "$" + (n < 10 ? n.toFixed(2) : n.toFixed(1));
+  const ready = () => S.chars.filter(c => c.status === "ready");
+
+  function fillSelects() {
+    const langs = LANGS.map(l => [l.id, l.name]);
+    for (const id of ["wLang", "tLang", "sLang"]) $(id).innerHTML = opts(langs, $(id).value || "ru");
+    $("wVoice").innerHTML = opts(VOICES.filter(v => v.g === wGender).map(v => [v.id, v.name]), $("wVoice").value);
+    $("tEmo").innerHTML = opts(Object.entries(EMOTIONS), $("tEmo").value || "neutral");
+    $("tAspect").innerHTML = opts(ASPECTS.map(a => [a, a]), $("tAspect").value || "9:16");
+    $("tModel").innerHTML = opts(TALK_MODELS.map(m => [m.id, m.name]), $("tModel").value);
+    $("sModel").innerHTML = opts(SCENE_MODELS.map(m => [m.id, m.name]), $("sModel").value);
+    $("wIdeas").innerHTML = IDEAS.map((s, i) => `<button type="button" data-i="${i}">${esc(s.split(",").slice(0, 2).join(","))}…</button>`).join("");
+    sceneModelChanged();
+  }
+  function sceneModelChanged() {
+    const m = SCENE_MODELS.find(x => x.id === $("sModel").value) || SCENE_MODELS[0];
+    const d = $("sDur").value, a = $("sAspect").value;
+    $("sDur").innerHTML = opts(m.durations.map(x => [x, `${x} сек`]), m.durations.includes(+d) ? d : (m.durations.includes(8) ? 8 : m.durations[0]));
+    $("sAspect").innerHTML = opts(m.aspects.map(x => [x, x]), m.aspects.includes(a) ? a : m.aspects[0]);
+    price();
+  }
+  function render() {
+    $("spentN").textContent = usd(S.spent);
+    $("cntChars").textContent = S.chars.length || ""; $("cntVideos").textContent = S.videos.length || "";
+    renderChars(); renderComposer(); renderVideos();
+  }
+
+  function renderChars() {
+    const el = $("charList");
+    const playing = [...el.querySelectorAll("audio")].some(a => !a.paused);
+    if (playing || (el.contains(document.activeElement) && document.activeElement.matches("select,input"))) return;
+    const open = [...el.querySelectorAll("details[open]")].map(d => d.closest("[data-id]")?.dataset.id);
+    el.innerHTML = `<button class="newch" id="newCh" type="button"><span><b>+</b>Новый персонаж</span></button>` + S.chars.map(c => {
+      if (c.status === "pick") {
+        const sel = candPick[c.id] ?? -1;
+        return `<div class="panel picker" data-id="${c.id}">
+          <div class="foot" style="padding:0"><h3>${esc(c.name)} · выберите лицо</h3><button class="btn danger sm" data-act="del">Удалить</button></div>
+          <p class="hint" style="margin:6px 0 0">Это лицо будет у персонажа во всех видео.</p>
+          <div class="cands">${c.candidates.map((u, i) => `<button type="button" data-cand="${i}" aria-pressed="${sel === i}"><img src="${esc(u)}" alt="Вариант ${i + 1}"></button>`).join("")}</div>
+          <div class="foot"><button class="btn ghost sm" data-act="reroll">Другие варианты · ≈$0.60</button><button class="btn rec" data-act="pick" ${sel < 0 ? "disabled" : ""}>Выбрать это лицо</button></div>
+        </div>`;
+      }
+      let inner = "";
+      if (c.status === "portraits" || c.status === "sheet") inner = `<div class="wait"><div><div class="spin"></div>${c.status === "portraits" ? "Рисуем 4 варианта лица…" : "Делаем 3 ракурса и голос…"}</div></div>`;
+      if (c.status === "failed") inner = `<div class="wait"><div class="fail">${esc(c.error || "Не получилось")}</div></div>`;
+      let body = "";
+      if (c.status === "ready") {
+        body = `${c.refs.length ? `<div class="refs">${[c.portrait, ...c.refs].map(u => `<img src="${esc(u)}" alt="" data-zoom="${esc(u)}">`).join("")}</div>` : ""}
+          <div class="acts"><button class="btn rec sm" data-act="video">Снять видео</button><button class="btn ghost sm" data-act="rename">Переименовать</button><button class="btn danger sm" data-act="del">Удалить</button></div>
+          <details class="voicebox"><summary class="hint" style="cursor:pointer">Голос: ${esc(VOICES.find(v => v.id === c.voice.id)?.name || c.voice.id)}</summary>
+            ${c.voiceJob ? `<p class="hint">Озвучиваем новый образец…</p>` : (c.sample ? `<audio controls preload="none" src="${esc(c.sample)}"></audio>` : "")}
+            <div class="row" style="grid-template-columns:1fr 1fr"><select data-f="voice">${opts(VOICES.filter(v => v.g === c.gender).map(v => [v.id, v.name]), c.voice.id)}</select><select data-f="lang">${opts(LANGS.map(l => [l.id, l.name]), c.sampleLang)}</select></div>
+            <label class="hint">Скорость <input type="range" data-f="speed" min="0.7" max="1.4" step="0.05" value="${c.voice.speed}"></label>
+            <label class="hint">Тон <input type="range" data-f="pitch" min="-6" max="6" step="1" value="${c.voice.pitch}"></label>
+            <button class="btn ghost sm" data-act="voice" ${c.voiceJob ? "disabled" : ""}>Сменить голос</button>
+          </details>`;
+      } else if (c.status === "failed") body = `<div class="acts"><button class="btn sm" data-act="reroll">Попробовать снова</button><button class="btn danger sm" data-act="del">Удалить</button></div>`;
+      return `<article class="ch" data-id="${c.id}"><div class="pic">${c.portrait ? `<img src="${esc(c.portrait)}" alt="${esc(c.name)}" data-zoom="${esc(c.portrait)}">` : ""}${inner}</div>
+        <div class="body"><h3>${esc(c.name)}</h3><div class="meta">${c.gender === "male" ? "♂" : "♀"} ${c.age} лет${c.status === "ready" ? " · готов" : ""}</div>${c.catch ? `<div class="catch">«${esc(c.catch)}»</div>` : ""}${c.quirk ? `<div class="quirk">✨ ${esc(c.quirk)}</div>` : ""}${body}</div></article>`;
+    }).join("");
+    open.forEach(id => { const d = el.querySelector(`[data-id="${id}"] details`); if (d) d.open = true; });
+  }
+
+  function renderComposer() {
+    const rs = ready();
+    $("composer").hidden = !rs.length; $("noChars").hidden = !!rs.length;
+    picked = picked.filter(id => rs.some(c => c.id === id));
+    if (!picked.length && rs.length) picked = [rs[0].id];
+    if (mode === "talk") picked = picked.slice(0, 1);
+    $("whoLabel").textContent = mode === "talk" ? "Персонаж" : "Персонажи (до двух)";
+    $("modeHint").textContent = mode === "talk" ? "Персонаж произносит ваш текст в камеру с синхронизацией губ. Длина видео — по длине текста." : "Персонаж (или двое) действуют в описанной сцене, с репликами и звуком.";
+    $("who").innerHTML = rs.map(c => `<button type="button" data-id="${c.id}" aria-pressed="${picked.includes(c.id)}"><img src="${esc(c.portrait)}" alt="">${esc(c.name)}</button>`).join("");
+    document.querySelectorAll("#mode button").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === mode));
+    $("talkBox").hidden = mode !== "talk"; $("sceneBox").hidden = mode !== "scene";
+    const cur = $("from").value;
+    const vs = S.videos.filter(v => v.status === "done" && (mode === "scene" || v.chars.includes(picked[0])));
+    $("from").innerHTML = `<option value="">— Начать с нуля —</option>` + vs.map(v => `<option value="${v.id}"${v.id === cur ? " selected" : ""}>${esc(vLabel(v))} — ${esc((v.text || v.scene || "").slice(0, 50))}</option>`).join("");
+    renderTalkIdeas(); renderLines(); price();
+  }
+  function renderTalkIdeas() {
+    const c = findChar(picked[0]);
+    if (!c || mode !== "talk") { $("tIdeas").innerHTML = ""; return; }
+    const ideas = PRESETS.find(p => p.id === c.preset)?.ideas || GENERIC_IDEAS;
+    $("tIdeas").innerHTML = (c.catch ? `<button type="button" data-catch>＋ коронная фраза</button>` : "") + ideas.map((t, i) => `<button type="button" data-idea="${i}">💡 ${esc(t.slice(0, 42))}…</button>`).join("");
+    $("tIdeas").dataset.char = c.id;
+  }
+  function renderLines() {
+    const names = picked.map(findChar).filter(Boolean);
+    lines.forEach(l => { if (!picked.includes(l.char)) l.char = picked[0]; });
+    if (document.activeElement?.closest("#sLines")) return;
+    $("sLines").innerHTML = lines.map((l, i) => `<div class="line" data-i="${i}"><select data-f="char">${opts(names.map(c => [c.id, c.name]), l.char)}</select><input type="text" data-f="text" maxlength="220" value="${esc(l.text)}" placeholder="Текст реплики"><button type="button" class="btn ghost sm" data-f="x">✕</button></div>`).join("");
+    $("sAdd").disabled = lines.length >= 4;
+  }
+  function price() {
+    if (mode === "talk") {
+      const s = estSeconds($("tText").value), m = TALK_MODELS.find(x => x.id === $("tModel").value) || TALK_MODELS[0];
+      $("vPrice").textContent = usd(COST.image + COST.tts + s * m.perSec);
+      $("vPriceNote").textContent = `≈ ${s} сек речи`;
+      $("tCount").textContent = `${$("tText").value.length}/800`;
+    } else {
+      const m = SCENE_MODELS.find(x => x.id === $("sModel").value) || SCENE_MODELS[0];
+      $("vPrice").textContent = usd((+$("sDur").value || 8) * m.perSec); $("vPriceNote").textContent = "";
+    }
+  }
+
+  const vLabel = (v) => `${{ talk: "В кадр", scene: "Сцена", merge: "Склейка" }[v.mode]} · ${(v.charNames || []).join(" & ")}`;
+  const STAGE = { prep: "кадр и голос", frame: "последний кадр", video: "видео" };
+  function renderVideos() {
+    const el = $("vidList");
+    if (!S.videos.length) { el.innerHTML = `<div class="empty" style="grid-column:1/-1">Здесь появятся ваши видео.</div>`; mergeUi(); return; }
+    const known = new Map([...el.querySelectorAll(".vd")].map(n => [n.dataset.id, n]));
+    const frag = document.createDocumentFragment();
+    for (const v of S.videos) {
+      const sig = `${v.status}|${v.stage}|${v.result}|${mergeSel.has(v.id)}`;
+      let n = known.get(v.id);
+      if (!n || n.dataset.sig !== sig) {
+        n = document.createElement("article");
+        n.className = `vd${v.aspect === "16:9" ? " w" : v.aspect === "1:1" ? " s" : ""}${mergeSel.has(v.id) ? " picked" : ""}`;
+        n.dataset.id = v.id; n.dataset.sig = sig;
+        const media = v.status === "done"
+          ? `<video src="${esc(v.result)}${v.poster ? "" : "#t=0.1"}" ${v.poster ? `poster="${esc(v.poster)}"` : ""} controls playsinline preload="metadata"></video>`
+          : `${v.poster ? `<img src="${esc(v.poster)}" alt="">` : ""}<div class="wait">${v.status === "working" ? `<div><div class="spin"></div>Снимаем: ${esc(STAGE[v.stage] || "…")}…</div>` : `<div class="fail">${esc(v.error || "Не получилось")}</div>`}</div>`;
+        n.innerHTML = `${v.status === "done" ? `<label class="sel"><input type="checkbox" data-act="sel" ${mergeSel.has(v.id) ? "checked" : ""}>в склейку</label>` : ""}
+          <div class="media">${media}</div>
+          <div class="body"><span class="tag">${esc(vLabel(v))}${v.seconds ? ` · ${Math.round(v.seconds)} сек` : v.duration ? ` · ${v.duration} сек` : ""} · ${esc(v.aspect || "")}</span>
+            ${v.text || v.scene ? `<div class="txt">${esc(v.text || v.scene)}</div>` : ""}
+            <div class="acts">${v.status === "done" ? `<button class="btn sm" data-act="dl">Скачать</button><button class="btn ghost sm" data-act="cont">Продолжить</button>` : ""}${v.status !== "working" ? `<button class="btn danger sm" data-act="vdel">Удалить</button>` : ""}</div>
+          </div>`;
+      }
+      frag.appendChild(n);
+    }
+    el.replaceChildren(frag);
+    mergeUi();
+  }
+  function mergeUi() {
+    for (const id of [...mergeSel]) if (!S.videos.some(v => v.id === id && v.status === "done")) mergeSel.delete(id);
+    $("mergeBar").hidden = mergeSel.size < 2 || tab !== "videos";
+    $("mergeTxt").textContent = `Выбрано клипов: ${mergeSel.size}`;
+  }
+  function setTab(n) {
+    tab = n;
+    document.querySelectorAll("[data-tab]").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === n));
+    document.querySelectorAll("[data-pane]").forEach(p => p.hidden = p.dataset.pane !== n);
+    mergeUi();
+  }
+  document.querySelectorAll("[data-tab]").forEach(b => b.addEventListener("click", () => setTab(b.dataset.tab)));
+
+  // кнопки: блокируем на время запроса и показываем ошибку
+  async function act(btn, fn, okMsg) {
+    if (btn) btn.disabled = true;
+    try { await fn(); if (okMsg) toast(okMsg); render(); tick(); }
+    catch (e) { toast(e.message, true); }
+    if (btn) btn.disabled = false;
+  }
+
+  // мастер
+  const openWizard = () => { $("wizard").hidden = false; setTab("chars"); $("wName").focus(); };
+  $("noCharsGo").onclick = openWizard;
+  $("wClose").onclick = () => $("wizard").hidden = true;
+  $("wGender").onclick = e => { const b = e.target.closest("button"); if (!b) return; wGender = b.dataset.v; $("wGender").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); $("wVoice").value = ""; fillSelects(); };
+  $("wSpeed").oninput = () => $("wSpeedV").textContent = (+$("wSpeed").value).toFixed(2);
+  $("wPitch").oninput = () => $("wPitchV").textContent = $("wPitch").value;
+  let wPreset = "";
+  function renderPresets() {
+    $("presets").innerHTML = PRESETS.map(p => `<button type="button" class="preset" data-p="${p.id}" aria-pressed="${wPreset === p.id}"><span class="pi">${p.icon}</span><b>${esc(p.name)}</b><span class="pt">${esc(p.tag)}</span><i>«${esc(p.catch)}»</i></button>`).join("")
+      + `<button type="button" class="preset rnd" data-p="random"><span class="pi">🎲</span><b>Случайный</b><span class="pt">Смешать всё наугад</span><i>Жмите ещё раз — будет другой</i></button>`;
+  }
+  function applyPreset(p) {
+    wPreset = p.id;
+    $("wName").value = p.name; $("wAge").value = p.age; $("wLook").value = p.look; $("wOutfit").value = p.outfit; $("wQuirk").value = p.quirk; $("wCatch").value = p.catch;
+    wGender = p.gender; $("wGender").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x.dataset.v === p.gender));
+    fillSelects(); $("wVoice").value = p.voice;
+    $("wSpeed").value = p.speed; $("wSpeedV").textContent = (+p.speed).toFixed(2); $("wPitch").value = p.pitch; $("wPitchV").textContent = p.pitch;
+    renderPresets();
+  }
+  $("presets").onclick = e => { const b = e.target.closest("[data-p]"); if (!b) return; applyPreset(b.dataset.p === "random" ? randomPreset() : PRESETS.find(p => p.id === b.dataset.p)); };
+  $("wIdeas").onclick = e => { const b = e.target.closest("button"); if (b) $("wLook").value = IDEAS[+b.dataset.i]; };
+  $("wGo").onclick = () => act($("wGo"), async () => {
+    await createChar({ preset: wPreset, quirk: $("wQuirk").value, catch: $("wCatch").value, name: $("wName").value, gender: wGender, age: $("wAge").value, look: $("wLook").value, outfit: $("wOutfit").value, voice: $("wVoice").value, speed: $("wSpeed").value, pitch: $("wPitch").value, lang: $("wLang").value });
+    $("wizard").hidden = true; ["wName", "wLook", "wOutfit", "wQuirk", "wCatch"].forEach(id => $(id).value = ""); wPreset = ""; renderPresets();
+  }, "Рисуем варианты — около минуты.");
+
+  $("charList").addEventListener("click", e => {
+    if (e.target.closest("#newCh")) return openWizard();
+    const z = e.target.closest("[data-zoom]"); if (z) { $("imgBig").src = z.dataset.zoom; $("imgModal").hidden = false; return; }
+    const card = e.target.closest("[data-id]"); if (!card) return;
+    const c = findChar(card.dataset.id);
+    const cand = e.target.closest("[data-cand]");
+    if (cand) { candPick[c.id] = +cand.dataset.cand; card.querySelectorAll("[data-cand]").forEach(x => x.setAttribute("aria-pressed", x === cand)); card.querySelector('[data-act="pick"]').disabled = false; return; }
+    const a = e.target.closest("[data-act]")?.dataset.act; if (!a) return;
+    const btn = e.target.closest("button");
+    if (a === "pick") act(btn, () => pick(c, candPick[c.id]), "Делаем ракурсы и голос — около минуты.");
+    if (a === "reroll") act(btn, () => reroll(c));
+    if (a === "del" && confirm("Удалить персонажа? Его видео останутся.")) { S.chars = S.chars.filter(x => x.id !== c.id); save(); render(); }
+    if (a === "rename") { const n = clean(prompt("Новое имя:", c.name), 40); if (n) { c.name = n; save(); render(); } }
+    if (a === "voice") { const q = f => card.querySelector(`[data-f="${f}"]`).value; act(btn, () => setVoice(c, { voice: q("voice"), lang: q("lang"), speed: q("speed"), pitch: q("pitch") })); }
+    if (a === "video") { picked = [c.id]; mode = "talk"; $("from").value = ""; renderComposer(); setTab("new"); }
+  });
+
+  // композер
+  $("mode").onclick = e => { const b = e.target.closest("button"); if (b) { mode = b.dataset.v; renderComposer(); } };
+  $("who").onclick = e => {
+    const b = e.target.closest("button"); if (!b) return;
+    const id = b.dataset.id;
+    if (mode === "talk") picked = [id];
+    else if (picked.includes(id)) { if (picked.length > 1) picked = picked.filter(x => x !== id); }
+    else picked = [...picked, id].slice(-2);
+    renderComposer();
+  };
+  $("tIdeas").onclick = e => {
+    const c = findChar($("tIdeas").dataset.char); if (!c) return;
+    const t = $("tText");
+    if (e.target.closest("[data-catch]")) t.value = (t.value.trim() ? t.value.trim() + " " : "") + c.catch;
+    const i = e.target.closest("[data-idea]"); if (i) t.value = (PRESETS.find(p => p.id === c.preset)?.ideas || GENERIC_IDEAS)[+i.dataset.idea];
+    t.focus(); price();
+  };
+  $("sAdd").onclick = () => { if (lines.length < 4) { lines.push({ char: picked[lines.length % picked.length] || picked[0], text: "" }); renderLines(); } };
+  const lineEdit = e => { const r = e.target.closest(".line"); if (r && e.target.dataset.f !== "x") lines[+r.dataset.i][e.target.dataset.f] = e.target.value; };
+  $("sLines").addEventListener("input", lineEdit); $("sLines").addEventListener("change", lineEdit);
+  $("sLines").addEventListener("click", e => { const x = e.target.closest('[data-f="x"]'); if (x) { lines.splice(+x.closest(".line").dataset.i, 1); x.blur(); renderLines(); } });
+  $("sModel").onchange = sceneModelChanged;
+  ["tText", "sDur", "tModel"].forEach(id => $(id).addEventListener("input", price));
+  $("vGo").onclick = () => act($("vGo"), async () => {
+    if (mode === "talk") { await createTalk({ char: picked[0], text: $("tText").value, scene: $("tScene").value, lang: $("tLang").value, emotion: $("tEmo").value, aspect: $("tAspect").value, model: $("tModel").value, from: $("from").value }); $("tText").value = ""; }
+    else { await createScene({ chars: picked, scene: $("sScene").value, lines: lines.filter(l => l.text.trim()), lang: $("sLang").value, model: $("sModel").value, duration: $("sDur").value, aspect: $("sAspect").value, from: $("from").value }); $("sScene").value = ""; lines = []; }
+    setTab("videos");
+  }, "Запущено! Видео появится во вкладке «Мои видео». Не закрывайте файл, пока идёт съёмка.");
+
+  // видео
+  $("vidList").addEventListener("change", e => {
+    if (e.target.dataset.act !== "sel") return;
+    const n = e.target.closest(".vd"); const id = n.dataset.id;
+    if (e.target.checked) mergeSel.add(id); else mergeSel.delete(id);
+    n.classList.toggle("picked", e.target.checked); n.dataset.sig = ""; mergeUi();
+  });
+  $("vidList").addEventListener("click", async e => {
+    const a = e.target.closest("[data-act]")?.dataset.act; if (!a || a === "sel") return;
+    const v = S.videos.find(x => x.id === e.target.closest(".vd").dataset.id);
+    if (a === "cont") { mode = v.mode === "scene" || v.chars.length > 1 ? "scene" : "talk"; picked = v.chars.filter(id => ready().some(c => c.id === id)).slice(0, 2); renderComposer(); $("from").value = v.id; setTab("new"); scrollTo({ top: 0, behavior: "smooth" }); }
+    if (a === "vdel" && confirm("Удалить видео из списка?")) { S.videos = S.videos.filter(x => x.id !== v.id); mergeSel.delete(v.id); save(); render(); }
+    if (a === "dl") {
+      const btn = e.target.closest("button"); btn.disabled = true;
+      try { const blob = await (await fetch(v.result)).blob(); const u = URL.createObjectURL(blob); const l = document.createElement("a"); l.href = u; l.download = `kadro-${v.id}.mp4`; l.click(); setTimeout(() => URL.revokeObjectURL(u), 5000); }
+      catch { window.open(v.result, "_blank"); }
+      btn.disabled = false;
+    }
+  });
+  $("mergeX").onclick = () => { mergeSel.clear(); renderVideos(); };
+  $("mergeGo").onclick = () => act($("mergeGo"), async () => {
+    const ids = S.videos.filter(v => mergeSel.has(v.id)).sort((a, b) => a.created - b.created).map(v => v.id);
+    await merge(ids); mergeSel.clear();
+  }, "Склейка запущена");
+
+  // ключ и настройки
+  async function testKey(k) {
+    try {
+      const r = await fetch("https://queue.fal.run/fal-ai/nano-banana-pro/requests/00000000-0000-0000-0000-000000000000/status", { headers: { authorization: "Key " + k } });
+      const t = await r.text();
+      if (r.status === 401 || r.status === 403) return "fal.ai не принял ключ.";
+      if (/balance|locked|billing/i.test(t)) return "Ключ верный, но на fal.ai закончился баланс.";
+      return "";
+    } catch { return ""; } // проверить не вышло — сохраняем, ошибка покажется при первой генерации
+  }
+  async function saveKey(k, errEl) {
+    k = k.trim();
+    if (!/^[\w-]+:[\w-]+$/.test(k) && k.length < 20) { errEl.textContent = "Похоже, это не ключ fal.ai. Он выглядит как «xxxx-…:xxxx»."; errEl.hidden = false; return false; }
+    const err = await testKey(k);
+    if (err) { errEl.textContent = err; errEl.hidden = false; return false; }
+    KEY = k; store.set("kd-local-key", k); errEl.hidden = true; return true;
+  }
+  $("keyGo").onclick = async () => { if (await saveKey($("keyIn").value, $("keyErr"))) start(); };
+  $("setBtn").onclick = () => { $("keyEdit").value = KEY; $("spentInfo").textContent = `Счётчик расходов: ${usd(S.spent)} (примерно, по ценам fal.ai)`; $("setMsg").hidden = true; $("setModal").hidden = false; };
+  $("keySave").onclick = async () => { if (await saveKey($("keyEdit").value, $("setMsg"))) { toast("Ключ сохранён"); $("setModal").hidden = true; tick(); } };
+  $("resetSpent").onclick = () => { S.spent = 0; save(); render(); $("spentInfo").textContent = "Счётчик расходов: $0"; };
+  $("exportBtn").onclick = () => { const u = URL.createObjectURL(new Blob([JSON.stringify(S, null, 1)], { type: "application/json" })); const l = document.createElement("a"); l.href = u; l.download = `kadro-backup-${new Date().toISOString().slice(0, 10)}.json`; l.click(); };
+  $("importIn").onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    try {
+      const d = JSON.parse(await f.text());
+      if (!Array.isArray(d.chars) || !Array.isArray(d.videos)) throw 0;
+      const haveC = new Set(S.chars.map(c => c.id)), haveV = new Set(S.videos.map(v => v.id));
+      S.chars.push(...d.chars.filter(c => !haveC.has(c.id))); S.videos.push(...d.videos.filter(v => !haveV.has(v.id)));
+      S.videos.sort((a, b) => b.created - a.created); save(); render(); tick(); toast("Копия загружена");
+    } catch { $("setMsg").textContent = "Это не резервная копия Kadro."; $("setMsg").hidden = false; }
+    e.target.value = "";
+  };
+  document.querySelectorAll(".modal").forEach(m => m.addEventListener("click", e => { if (e.target === m || e.target.closest("[data-close]")) m.hidden = true; }));
+  document.addEventListener("keydown", e => { if (e.key === "Escape") document.querySelectorAll(".modal").forEach(m => m.hidden = true); });
+
+  function start() { $("gate").hidden = !!KEY; $("studio").hidden = !KEY; $("spent").hidden = !KEY; if (KEY) { render(); tick(); } }
+  fillSelects(); renderPresets();
+  start();
+})();
+</script>
+</body>
+</html>
